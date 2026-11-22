@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=FreeLLMAPI
+GenericName=LLM API Interface
+Comment=FreeLLMAPI - Open LLM API
+Exec=flatpak run org.mozilla.firefox --new-window https://freellmapi.com
+Icon=org.mozilla.firefox
+Terminal=false
+Categories=Network;WebBrowser;Development;
+StartupNotify=true

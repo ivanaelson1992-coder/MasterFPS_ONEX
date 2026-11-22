@@ -1,0 +1,13 @@
+[Unit]
+Description=First Boot Setup
+ConditionPathExists=!/etc/.firstboot_done
+After=systemd-udev-settle.service NetworkManager.service
+Before=graphical.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/firstboot-setup
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

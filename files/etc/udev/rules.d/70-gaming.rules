@@ -1,0 +1,12 @@
+# CPU governor performance para CPUs de jogos
+ACTION=="add|change", SUBSYSTEM=="cpu", ATTR{cpufreq/scaling_governor}="performance"
+
+# I/O scheduler BFQ para NVMe/SSD
+ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="bfq"
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/scheduler}="bfq"
+ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="bfq"
+
+# GPU permissions
+KERNEL=="renderD128", GROUP="render", MODE="0666"
+KERNEL=="kfd", GROUP="render", MODE="0666"
+KERNEL=="dri/card[0-9]*", GROUP="video", MODE="0666"

@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+
+# Repositórios otimizados (CachyOS + Chaotic-AUR)
+cat >> /etc/pacman.conf <<'EOF'
+[cachyos]
+Server = https://mirror.cachyos.org/$repo/$arch
+SigLevel = Required DatabaseOptional
+
+[chaotic-aur]
+Server = https://geo-mirror.chaotic.cx/$repo/$arch
+SigLevel = Required DatabaseOptional
+EOF
+
+# Importa chaves
+pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
+pacman-key --lsign-keys F3B607488DB35A47
+pacman -U --noconfirm 'https://mirror.cachyos.org/cachyos-repo/$arch/cachyos-keyring-*.pkg.tar.zst'
+pacman -U --noconfirm 'https://mirror.cachyos.org/cachyos-repo/$arch/cachyos-mirrorlist-*.pkg.tar.zst'
+pacman -U --noconfirm 'https://mirror.cachyos.org/cachyos-repo/$arch/cachyos-v3-mirrorlist-*.pkg.tar.zst'
+pacman -U --noconfirm 'https://mirror.cachyos.org/cachyos-repo/$arch/cachyos-v4-mirrorlist-*.pkg.tar.zst'
+
+# Chaotic-AUR
+pacman-key --recv-keys 3056513887B78AEB --keyserver keyserver.ubuntu.com
+pacman-key --lsign-keys 3056513887B78AEB
+pacman -U --noconfirm 'https://cdn.chaotic.cx/chaotic-aur/chaotic-keyring-*.pkg.tar.zst'
+pacman -U --noconfirm 'https://cdn.chaotic.cx/chaotic-aur/chaotic-mirrorlist-*.pkg.tar.zst'
+
+pacman -Sy --noconfirm
+
+# Kernel CachyOS (BORE, LTO, -O3, x86-64-v3/v4)
+pacman -S --noconfirm --needed linux-cachyos linux-cachyos-headers cachyos-settings cachyos-ananicy-rules cachyos-zram-config
+
+# Microcode
+pacman -S --noconfirm --needed amd-ucode intel-ucode

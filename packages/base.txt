@@ -1,0 +1,18 @@
+# Base sistema
+base linux-cachyos linux-cachyos-headers linux-firmware
+base-devel git wget curl zstd lz4 btrfs-progs dosfstools e2fsprogs
+networkmanager network-manager-applet nm-connection-editor
+bluez bluez-utils blueman
+pipewire pipewire-pulse pipewire-alsa pipewire-jack wireplumber
+alsa-utils pavucontrol
+systemd-swap ananicy-cpp tuned
+sudo polkit gnome-keyring seahorse
+vim nano htop btop fastfetch neofetch
+man-db man-pages texinfo
+reflector pacman-contrib
+apparmor audit
+power-profiles-daemon
+cpupower
+breeze-icons
+sddm
+foot

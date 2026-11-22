@@ -1,0 +1,14 @@
+root=PARTUUID=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX rw quiet loglevel=3 \
+mitigations=off \
+nvidia_drm.modeset=1 \
+amdgpu.ppfeaturemask=0xffffffff \
+intel_iommu=on iommu=pt \
+transparent_hugepage=always \
+zswap.enabled=1 zswap.compressor=zstd zswap.max_pool_percent=20 \
+nowatchdog \
+nmi_watchdog=0 \
+processor.max_cstate=1 \
+idle=poll \
+tsc=reliable \
+nohz_full=1-$(nproc --all) \
+rcu_nocbs=1-$(nproc --all)

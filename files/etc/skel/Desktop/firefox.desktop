@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Firefox
+GenericName=Web Browser
+Comment=Firefox web browser
+Exec=flatpak run org.mozilla.firefox
+Icon=org.mozilla.firefox
+Terminal=false
+Categories=Network;WebBrowser;
+StartupNotify=true
+StartupWMClass=firefox

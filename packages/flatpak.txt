@@ -1,0 +1,15 @@
+flathub:com.valvesoftware.Steam
+flathub:org.mozilla.firefox
+flathub:com.google.Chrome
+flathub:com.microsoft.Edge
+flathub:com.discordapp.Discord
+flathub:com.obsproject.Studio
+flathub:net.lutris.Lutris
+flathub:com.heroicgameslauncher.hgl
+flathub:com.usebottles.bottles
+flathub:org.gnome.TextEditor
+flathub:com.visualstudio.code
+flathub:org.freedesktop.Platform.VulkanLayer.MangoHud
+flathub:org.freedesktop.Platform.VulkanLayer.gamemode
+chaotic:proton-ge-custom
+chaotic:wine-ge-custom

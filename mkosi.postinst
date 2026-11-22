@@ -1,0 +1,221 @@
+#!/bin/bash
+set -euo pipefail
+
+# 1. Habilita serviços essenciais
+systemctl enable \
+  systemd-timesyncd \
+  systemd-resolved \
+  systemd-zram-setup@zram0 \
+  ananicy-cpp \
+  NetworkManager \
+  bluetooth \
+  libvirtd \
+  cups \
+  sshd \
+  fstrim.timer \
+  paccache.timer \
+  power-profiles-daemon
+
+# 2. Usuário padrão (senha: gaming)
+useradd -m -G wheel,video,input,libvirt,kvm,render,audio -s /bin/bash gaming
+echo "gaming:gaming" | chpasswd
+echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
+
+# 3. Flatpaks (Steam, Browsers, Apps)
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists chaotic https://flatpak.chaotic.cx/chaotic.flatpakrepo
+
+flatpak install -y --noninteractive flathub \
+  com.valvesoftware.Steam \
+  org.mozilla.firefox \
+  com.google.Chrome \
+  com.microsoft.Edge \
+  com.discordapp.Discord \
+  com.obsproject.Studio \
+  net.lutris.Lutris \
+  com.heroicgameslauncher.hgl \
+  com.usebottles.bottles \
+  org.gnome.TextEditor \
+  com.visualstudio.code
+
+# 4. Configura Gamescope session (login automático opcional)
+mkdir -p /usr/share/wayland-sessions
+cat > /usr/share/wayland-sessions/gamescope.desktop <<'EOF'
+[Desktop Entry]
+Name=Gamescope (Steam Deck Mode)
+Comment=Gamescope session with Steam
+Exec=gamescope -W 1920 -H 1080 -b -- steam -gamepadui
+Type=Application
+DesktopNames=gamescope
+EOF
+
+# 5. Otimizações runtime (tuned profile)
+mkdir -p /etc/tuned/gaming-profile
+cat > /etc/tuned/gaming-profile/tuned.conf <<'EOF'
+[main]
+summary=Gaming optimized profile
+include=throughput-performance
+
+[cpu]
+governor=performance
+energy_perf_bias=performance
+min_perf_pct=100
+
+[vm]
+transparent_hugepages=always
+compaction_proactiveness=100
+
+[disk]
+scheduler=bfq
+read_ahead=4096
+
+[sysctl]
+vm.max_map_count=2147483642
+kernel.sched_autogroup_enabled=0
+kernel.sched_min_granularity_ns=10000000
+kernel.sched_wakeup_granularity_ns=15000000
+EOF
+systemctl enable tuned
+tuned-adm profile gaming-profile
+
+# 6. Módulos NVIDIA (DRM KMS)
+mkdir -p /etc/modules-load.d
+echo -e "nvidia\nnvidia_modeset\nnvidia_uvm\nnvidia_drm" > /etc/modules-load.d/nvidia.conf
+
+# 7. Initramfs com microcode + zstd
+sed -i 's/^COMPRESSION=.*/COMPRESSION="zstd"/' /etc/mkinitcpio.conf
+sed -i 's/^MODULES=.*/MODULES=(amdgpu radeon i915 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+mkinitcpio -P
+
+# 8. GRUB + systemd-boot (dual)
+bootctl install
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GamingOS
+grub-install --target=i386-pc /dev/sda 2>/dev/null || true
+grub-mkconfig -o /boot/grub/grub.cfg
+
+# 9. Configurações de performance máxima e desktop
+
+# 9a. Power profile máximo (performance)
+mkdir -p /etc/power-profiles-daemon
+cat > /etc/power-profiles-daemon/power-profiles.conf <<'EOF'
+[performance]
+governor=performance
+energy_perf_bias=performance
+min_freq_pct=100
+max_freq_pct=100
+turbo_pct=100
+cpu_hwp_desired_performance=100
+gpu_performance=high
+EOF
+systemctl enable power-profiles-daemon
+
+# 9b. Cursor grande RGB (tema breeze com tamanho 48)
+mkdir -p /usr/share/icons/breeze_cursors/cursors
+# Criar configuração X11 para cursor grande
+mkdir -p /etc/X11/xorg.conf.d
+cat > /etc/X11/xorg.conf.d/50-cursor.conf <<'EOF'
+Section "InputClass"
+    Identifier "cursor size"
+    MatchIsPointer "yes"
+    Option "CursorSize" "48"
+EndSection
+EOF
+
+# Configuração Wayland/GNOME/GTK para cursor grande
+mkdir -p /etc/gtk-3.0
+cat > /etc/gtk-3.0/settings.ini <<'EOF'
+[Settings]
+gtk-cursor-theme-name=breeze_cursors
+gtk-cursor-theme-size=48
+EOF
+
+mkdir -p /etc/gtk-4.0
+cat > /etc/gtk-4.0/settings.ini <<'EOF'
+[Settings]
+gtk-cursor-theme-name=breeze_cursors
+gtk-cursor-theme-size=48
+EOF
+
+# Variáveis de ambiente para cursor
+mkdir -p /etc/environment.d
+cat > /etc/environment.d/99-cursor.conf <<'EOF'
+XCURSOR_SIZE=48
+XCURSOR_THEME=breeze_cursors
+WAYLAND_CURSOR_SIZE=48
+WAYLAND_CURSOR_THEME=breeze_cursors
+EOF
+
+# 9c. Desktop shortcuts confiáveis (marcar como executáveis)
+chmod +x /etc/skel/Desktop/*.desktop 2>/dev/null || true
+
+# 9d. Configurar Gamescope para iniciar Steam automaticamente no boot (auto-login)
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/override.conf <<'EOF'
+[Service]
+ExecStart=
+ExecStart=-/usr/bin/agetty --autologin gaming --noclear %I $TERM
+EOF
+
+# 9e. Configurar SDDM (se presente) para auto-login gaming
+mkdir -p /etc/sddm.conf.d
+cat > /etc/sddm.conf.d/autologin.conf <<'EOF'
+[Autologin]
+User=gaming
+Session=gamescope
+EOF
+
+# 9f. Otimizações adicionais de fluidez
+# CPU frequency scaling - force performance
+mkdir -p /etc/default
+cat > /etc/default/cpupower <<'EOF'
+governor='performance'
+EOF
+systemctl enable cpupower
+
+# Desabilitar mitigations extra no kernel cmdline (já está no mkosi.default)
+
+# 9g. NVIDIA Persistence Daemon para reduzir latência
+systemctl enable nvidia-persistenced 2>/dev/null || true
+
+# 9h. Configurar MangoHud overlay padrão
+mkdir -p /etc/mangohud
+cat > /etc/mangohud/mangohud.conf <<'EOF'
+# MangoHud configuração padrão - performance
+gpu_stats
+cpu_stats
+ram
+vram
+fps_limit=0
+frame_timing=1
+gpu_color=FF00FF
+cpu_color=00FFFF
+ram_color=FFFF00
+vram_color=FF8800
+font_size=24
+position=top-left
+no_display=0
+EOF
+
+# 9i. Gamemode configuração
+mkdir -p /etc/gamemode
+cat > /etc/gamemode/gamemode.ini <<'EOF'
+[general]
+renice=10
+ioprio=0
+inhibit_screensaver=1
+gpu_optimisations=1
+gpu_pci_id=auto
+
+[cpu]
+governor=performance
+min_perf_pct=100
+
+[gpu]
+allow_gpu_optimisations=1
+nvidia_perf_level=maximum
+amd_perf_level=high
+EOF
+
+# 10. Limpeza
+pacman -Sc --noconfirm
+rm -rf /var/cache/pacman/pkg/* /tmp/* /root/.cache

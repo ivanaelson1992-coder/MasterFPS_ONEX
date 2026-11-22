@@ -1,0 +1,36 @@
+[Distribution]
+Distribution=arch
+Release=rolling
+
+[Output]
+Format=raw qcow2 iso
+Output=MasterFPS
+Bootable=yes
+Bootloader=systemd-boot grub
+UnifiedKernelImage=yes
+UkiDir=/usr/lib/modules
+UkiCmdlineFile=/etc/kernel/cmdline
+
+[Content]
+Packages=packages/base.txt packages/gaming.txt packages/drivers.txt
+Flatpak=packages/flatpak.txt
+LocalMirror=https://geo.mirror.pkgbuild.com/$repo/os/$arch
+WithNetwork=yes
+WithTests=no
+Documentation=no
+Locale=pt_BR.UTF-8
+Timezone=America/Sao_Paulo
+KeyboardLayout=br-abnt2
+Hostname=gaming-os
+MachineID=auto
+RandomSeed=auto
+
+[Security]
+SELinux=apparmor
+SecureBoot=auto
+Tpm2=auto
+
+[Performance]
+Parallel=yes
+Compression=zstd
+CompressionLevel=19
