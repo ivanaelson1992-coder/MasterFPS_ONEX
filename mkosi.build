@@ -1,21 +1,5 @@
 #!/bin/bash
 set -euo pipefail
 
-# Configurar repositórios CachyOS diretamente no pacman.conf do build
-cat >> /etc/pacman.conf <<'EOF'
-
-[cachyos]
-Server = https://mirror.cachyos.org/$repo/$arch
-SigLevel = Optional TrustAll
-
-[cachyos-v3]
-Server = https://mirror.cachyos.org/$repo/v3/$arch
-SigLevel = Optional TrustAll
-
-[chaotic-aur]
-Server = https://geo-mirror.chaotic.cx/$repo/$arch
-SigLevel = Optional TrustAll
-EOF
-
-# Sincronizar
+# Script de build agora apenas sincroniza (os repositÃ³rios jÃ¡ estarÃ£o no ambiente via mkosi.default)
 pacman -Sy --noconfirm
