@@ -1,4 +1,5 @@
 name: Build MasterFPS ISO
+
 on:
   push:
     branches: [ main ]
@@ -7,49 +8,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: archlinux:latest
-      options: --privileged
-    permissions:
-      contents: write
     steps:
-      - name: Instalar Dependencias do Host Arch
-        run: |
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm git python-pip arch-install-scripts pacman-contrib xorriso mtools dosfstools zstd systemd-libs base-devel
-          # Instalar mkosi via pip no Arch
-          pip install --break-system-packages git+https://github.com/systemd/mkosi.git
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Chaves CachyOS
+      - name: Liberar espaco em disco
         run: |
-          pacman-key --init
-          pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
-          pacman-key --lsign-key F3B607488DB35A47
-          # Instalar keyring do CachyOS para permitir download dos pacotes otimizados
-          sed -i 's/^SigLevel.*/SigLevel = Never/g' /etc/pacman.conf || true
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
+
+      - name: Instalar Dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y arch-install-scripts pacman-package-manager zstd squashfs-tools xorriso mtools dosfstools python3-pip systemd-container
+          sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
 
       - name: Build Image
         run: |
-          mkdir -p output
           chmod +x mkosi.build mkosi.postinst
-          mkosi --force --output-dir=output build
+          sudo mkosi --force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MasterFPS-Image
-          path: output/*
-
-      - name: Create Release
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.0
-          name: MasterFPS Gaming OS v1.0.0
-          files: output/*
-          body: "Imagem MasterFPS completa: Drivers NVIDIA (GTX 950), Performance MÃƒÆ’Ã‚Â¡xima, Cursor Grande RGB e Atalhos."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: MasterFPS-x86_64-Image
+          path: out/*

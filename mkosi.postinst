@@ -1,81 +1,68 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
-# 1. Enable services
-systemctl enable \
-  systemd-timesyncd \
-  systemd-resolved \
-  NetworkManager \
-  bluetooth \
-  sshd || true
+useradd -m -G wheel,video,audio,input -s /bin/bash gamer || true
+echo "gamer:gamer" | chpasswd
+echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
 
-# 2. Add gaming user
-useradd -m -G wheel,video,input,render,audio -s /bin/bash gaming || true
-echo "gaming:gaming" | chpasswd
-echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
+mkdir -p /etc/lightdm/lightdm.conf.d /usr/share/themes /home/gamer/Desktop /usr/share/applications /home/gamer/.config/autostart
 
-# 3. Create desktop shortcuts for user
-mkdir -p /etc/skel/Desktop
-mkdir -p /home/gaming/Desktop
+cat << 'EOL' > /etc/lightdm/lightdm.conf.d/10-autologin.conf
+[Seat:*]
+autologin-user=gamer
+autologin-user-timeout=0
+user-session=xfce
+EOL
 
-# Ensure desktop files exist in /home/gaming/Desktop
-cp -r /etc/skel/Desktop/* /home/gaming/Desktop/ 2>/dev/null || true
-chown -R gaming:gaming /home/gaming || true
+cat << 'EOL' > /etc/lightdm/lightdm-gtk-greeter.conf
+[greeter]
+background=/usr/share/backgrounds/masterfps-fenix.png
+EOL
 
-# 4. Auto-login on TTY1
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/override.conf <<'EOF'
-[Service]
-ExecStart=
-ExecStart=-/usr/bin/agetty --autologin gaming --noclear %I $TERM
+git clone --depth=1 https://github.com /usr/share/themes/Windows-7 || true
+
+cat << 'EOD' > /usr/share/applications/master-gamer.desktop
+[Desktop Entry]
+Name=Master Gamer
+Exec=/usr/local/bin/master-gamer
+Icon=utilities-system-monitor
+Terminal=false
+Type=Application
+EOD
+cp /usr/share/applications/master-gamer.desktop /home/gamer/Desktop/
+chmod +x /home/gamer/Desktop/master-gamer.desktop
+
+cat << 'EON' > /home/gamer/.config/autostart/nexo-os.desktop
+[Desktop Entry]
+Type=Application
+Name=Nexo OS
+Exec=/opt/nexo-os/start.sh
+X-GNOME-Autostart-enabled=true
+EON
+
+cat << 'EOF' > /usr/local/bin/masterfps-firstboot.sh
+#!/bin/bash
+systemctl enable --now NetworkManager systemd-zram-setup@zram0.service || true
+su - gamer -c "DISPLAY=:0 xfconf-query -c xsettings -p /Net/ThemeName -s Windows-7" || true
+su - gamer -c "DISPLAY=:0 xfconf-query -c xfwm4 -p /general/theme -s Windows-7" || true
+su - gamer -c "DISPLAY=:0 xfconf-query -c xfwm4 -p /general/use_compositing -s false" || true
+su - gamer -c "DISPLAY=:0 xfconf-query -c xfce4-panel -p /panels/panel-1/size -s 40" || true
+su - gamer -c "DISPLAY=:0 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /usr/share/backgrounds/masterfps-fenix.png" || true
+flatpak remote-add --if-not-exists flathub https://flathub.org || true
+if [ -f /etc/masterfps/flatpak.txt ]; then
+    while read -r app; do [ -n "$app" ] && flatpak install -y flathub "$app" || true; done < /etc/masterfps/flatpak.txt
+fi
+systemctl disable firstboot.service || true
+EOF
+chmod +x /usr/local/bin/masterfps-firstboot.sh
+
+cat << 'EOF' > /etc/os-release
+NAME="MasterFPS"
+PRETTY_NAME="MasterFPS Gaming OS"
+ID=masterfps
+ID_LIKE=arch
+BUILD_ID=rolling
 EOF
 
-# 5. NVIDIA DRM KMS
-mkdir -p /etc/modules-load.d
-echo -e "nvidia\nnvidia_modeset\nnvidia_uvm\nnvidia_drm" > /etc/modules-load.d/nvidia.conf
-
-# 6. MangoHud & GameMode defaults
-mkdir -p /etc/mangohud
-cat > /etc/mangohud/mangohud.conf <<'EOF'
-gpu_stats
-cpu_stats
-ram
-vram
-fps_limit=0
-frame_timing=1
-gpu_color=FF00FF
-cpu_color=00FFFF
-ram_color=FFFF00
-vram_color=FF8800
-font_size=24
-position=top-left
-EOF
-
-mkdir -p /etc/gamemode
-cat > /etc/gamemode/gamemode.ini <<'EOF'
-[general]
-renice=10
-ioprio=0
-inhibit_screensaver=1
-gpu_optimisations=1
-
-[cpu]
-governor=performance
-min_perf_pct=100
-
-[gpu]
-allow_gpu_optimisations=1
-nvidia_perf_level=maximum
-EOF
-
-# 7. Cursor Size (48px)
-mkdir -p /etc/environment.d
-cat > /etc/environment.d/99-cursor.conf <<'EOF'
-XCURSOR_SIZE=48
-XCURSOR_THEME=breeze_cursors
-WAYLAND_CURSOR_SIZE=48
-WAYLAND_CURSOR_THEME=breeze_cursors
-EOF
-
-# Clean pacman cache
-pacman -Sc --noconfirm || true
+systemctl enable lightdm NetworkManager firstboot.service || true
+chown -R gamer:gamer /home/gamer

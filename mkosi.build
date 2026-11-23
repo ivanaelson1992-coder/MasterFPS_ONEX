@@ -1,5 +1,67 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
-# Script de build agora apenas sincroniza (os repositÃ³rios jÃ¡ estarÃ£o no ambiente via mkosi.default)
-pacman -Sy --noconfirm
+mkdir -p "$DESTDIR/etc/modules-load.d" "$DESTDIR/etc/masterfps" "$DESTDIR/usr/share/backgrounds" "$DESTDIR/usr/local/bin"
+echo "ntsync" > "$DESTDIR/etc/modules-load.d/ntsync.conf"
+
+if [ -f "packages/flatpak.txt" ]; then
+    cp packages/flatpak.txt "$DESTDIR/etc/masterfps/flatpak.txt"
+fi
+
+python3 - << 'EOP'
+from PIL import Image, ImageDraw
+import os
+
+W, H = 1920, 1080
+img = Image.new("RGB", (W, H), "#0b0c10")
+draw = ImageDraw.Draw(img)
+
+for y in range(H):
+    draw.line([(0, y), (W, y)], fill=(int(11+(y/H)*35), int(12+(y/H)*10), int(16+(y/H)*20)))
+
+cx, cy = W // 2, H // 2 - 40
+draw.polygon([(cx, cy+40), (cx-420, cy-180), (cx-260, cy+60), (cx-120, cy+120)], fill="#ff4500")
+draw.polygon([(cx, cy+40), (cx+420, cy-180), (cx+260, cy+60), (cx+120, cy+120)], fill="#ff4500")
+draw.polygon([(cx, cy+20), (cx-280, cy-110), (cx-180, cy+50)], fill="#ff8c00")
+draw.polygon([(cx, cy+20), (cx+280, cy-110), (cx+180, cy+50)], fill="#ff8c00")
+draw.polygon([(cx, cy-130), (cx-45, cy+40), (cx, cy+220), (cx+45, cy+40)], fill="#ffd700")
+draw.text((cx - 100, cy + 250), "MASTER FPS", fill="#ffffff")
+
+out_path = os.path.join(os.environ.get("DESTDIR", ""), "usr/share/backgrounds/masterfps-fenix.png")
+img.save(out_path)
+EOP
+
+cat << 'EOG' > "$DESTDIR/usr/local/bin/master-gamer"
+#!/usr/bin/env python3
+import sys, os, psutil
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt6.QtCore import QTimer, Qt
+
+class MasterGamer(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Master Gamer - Painel MasterFPS")
+        self.setFixedSize(380, 300)
+        self.setStyleSheet("QWidget{background:#12141a;color:#fff;font-family:sans-serif;}QPushButton{background:#d9381e;padding:10px;border-radius:6px;font-weight:bold;}QPushButton:hover{background:#ff4d2e;}")
+        l = QVBoxLayout()
+        self.s = QLabel("CPU: 0% | RAM: 0%")
+        self.s.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l.addWidget(self.s)
+        b1 = QPushButton("Energia Maxima (CPU Performance)")
+        b1.clicked.connect(lambda: os.system("echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"))
+        b2 = QPushButton("Modo Turbo FPS (Limpar RAM)")
+        b2.clicked.connect(lambda: os.system("sync && echo 3 | sudo tee /proc/sys/vm/drop_caches"))
+        b3 = QPushButton("Zero Input Lag (Compositor OFF + BBR)")
+        b3.clicked.connect(lambda: os.system("xfconf-query -c xfwm4 -p /general/use_compositing -s false && sudo sysctl -w net.ipv4.tcp_congestion_control=bbr"))
+        for b in (b1, b2, b3): l.addWidget(b)
+        self.setLayout(l)
+        self.t = QTimer()
+        self.t.timeout.connect(lambda: self.s.setText(f"CPU: {psutil.cpu_percent()}% | RAM: {psutil.virtual_memory().percent}%"))
+        self.t.start(1000)
+
+app = QApplication(sys.argv)
+w = MasterGamer()
+w.show()
+sys.exit(app.exec())
+EOG
+chmod +x "$DESTDIR/usr/local/bin/master-gamer"
