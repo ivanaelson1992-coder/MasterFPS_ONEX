@@ -16,7 +16,7 @@ jobs:
         run: |
           pacman-key --init
           pacman-key --populate archlinux
-          pacman -Sy --noconfirm --needed git mkosi arch-install-scripts squashfs-tools libisoburn mtools dosfstools python edk2-ovmf
+          pacman -Syu --noconfirm --needed git mkosi arch-install-scripts squashfs-tools libisoburn mtools dosfstools python edk2-ovmf
 
       - name: Checkout repository
         uses: actions/checkout@v4
