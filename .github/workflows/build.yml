@@ -13,7 +13,6 @@ permissions:
 
 env:
   ISO_NAME: MasterFPS
-  MKOSI_OUTPUT_DIR: output
 
 jobs:
   build:
@@ -23,8 +22,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Free disk space
         run: |
@@ -37,13 +34,11 @@ jobs:
           sudo apt-get install -y arch-install-scripts pacman-package-manager zstd squashfs-tools xorriso mtools dosfstools python3-pip systemd-container qemu-utils
           sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
 
-      - name: Initialize Arch/CachyOS keys
+      - name: Initialize Arch/CachyOS keyring
         run: |
           sudo mkdir -p /etc/pacman.d/gnupg
           sudo pacman-key --init || true
           sudo pacman-key --populate archlinux || true
-          sudo pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com || true
-          sudo pacman-key --lsign-key F3B607488DB35A47 || true
 
       - name: Make scripts executable
         run: |
@@ -51,37 +46,30 @@ jobs:
 
       - name: Build ISO with mkosi
         run: |
-          mkdir -p ${{ env.MKOSI_OUTPUT_DIR }}
-          sudo mkosi \
-            --force \
-            --output-dir=${{ env.MKOSI_OUTPUT_DIR }} \
-            --image=${{ env.ISO_NAME }} \
-            --format=iso \
-            --bootable=yes \
-            --compress=zstd \
-            --with-network=yes
+          mkdir -p output
+          sudo mkosi --force --output-dir=output
 
       - name: Verify & Hash ISO
         run: |
-          ls -lh ${{ env.MKOSI_OUTPUT_DIR }}/
-          if [ -f "${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso" ]; then
-            sha256sum ${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso > ${{ env.ISO_NAME }}.sha256
-            cat ${{ env.ISO_NAME }}.sha256
+          ls -lh output/
+          if [ -f "output/MasterFPS.iso" ]; then
+            sha256sum output/MasterFPS.iso > MasterFPS.sha256
+            cat MasterFPS.sha256
           fi
 
-      - name: Split ISO (2GB parts for GitHub Release limit)
+      - name: Split ISO (1.9GB parts)
         run: |
-          if [ -f "${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso" ]; then
-            cd ${{ env.MKOSI_OUTPUT_DIR }}
-            split -b 1900M ${{ env.ISO_NAME }}.iso ${{ env.ISO_NAME }}.iso.part-
-            ls -lh ${{ env.ISO_NAME }}.iso.part-*
+          if [ -f "output/MasterFPS.iso" ]; then
+            cd output
+            split -b 1900M MasterFPS.iso MasterFPS.iso.part-
+            ls -lh MasterFPS.iso.part-*
           fi
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ env.ISO_NAME }} ${{ github.ref_name }}
+          name: MasterFPS ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           body: |
             ## 🎮 MasterFPS Gaming OS (ISO Completa)
@@ -98,8 +86,8 @@ jobs:
             2. Junte: `cat MasterFPS.iso.part-* > MasterFPS.iso`
             3. Grave no USB (Rufus no modo DD ou `dd` no Linux)
           files: |
-            ${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso.part-*
-            ${{ env.ISO_NAME }}.sha256
+            output/MasterFPS.iso.part-*
+            MasterFPS.sha256
           draft: false
           prerelease: false
         env:
@@ -108,6 +96,6 @@ jobs:
       - name: Upload ISO Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ISO_NAME }}-iso
-          path: ${{ env.MKOSI_OUTPUT_DIR }}/*
+          name: MasterFPS-iso
+          path: output/*
           retention-days: 30
