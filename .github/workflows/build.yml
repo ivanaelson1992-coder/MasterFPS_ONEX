@@ -18,7 +18,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             systemd \
-            systemd-container \
+            systemd-container systemd-repart fdisk udev \
             systemd-repart \
             arch-install-scripts \
             pacman \
