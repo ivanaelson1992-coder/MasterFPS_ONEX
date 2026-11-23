@@ -1,35 +1,35 @@
 #!/bin/bash
 set -e
 
-mkdir -p /etc/sudoers.d /etc/lightdm/lightdm.conf.d /usr/share/themes /usr/share/applications
+mkdir -p "$BUILDROOT/etc/sudoers.d" "$BUILDROOT/etc/lightdm/lightdm.conf.d" "$BUILDROOT/usr/share/themes" "$BUILDROOT/usr/share/applications" "$BUILDROOT/usr/local/bin"
 
-groupadd -f wheel
-groupadd -f input
-groupadd -f sudo
-useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer 2>/dev/null || useradd -m -s /bin/bash gamer || true
+mkosi-chroot groupadd -f wheel
+mkosi-chroot groupadd -f input
+mkosi-chroot groupadd -f sudo
+mkosi-chroot useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer 2>/dev/null || mkosi-chroot useradd -m -s /bin/bash gamer || true
 
 HASH='$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47'
-usermod -p "$HASH" gamer 2>/dev/null || true
+mkosi-chroot usermod -p "$HASH" gamer 2>/dev/null || true
 
-echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
-chmod 0440 /etc/sudoers.d/gamer
+echo "gamer ALL=(ALL) NOPASSWD: ALL" > "$BUILDROOT/etc/sudoers.d/gamer"
+chmod 0440 "$BUILDROOT/etc/sudoers.d/gamer"
 
-cat << 'EOL' > /etc/lightdm/lightdm.conf.d/10-autologin.conf
+cat << 'EOL' > "$BUILDROOT/etc/lightdm/lightdm.conf.d/10-autologin.conf"
 [Seat:*]
 autologin-user=gamer
 autologin-user-timeout=0
 user-session=xfce
 EOL
 
-cat << 'EOL' > /etc/lightdm/lightdm-gtk-greeter.conf
+cat << 'EOL' > "$BUILDROOT/etc/lightdm/lightdm-gtk-greeter.conf"
 [greeter]
 background=/usr/share/backgrounds/masterfps-fenix.png
 EOL
 
-git clone --depth=1 https://github.com /usr/share/themes/Windows-7 2>/dev/null || true
+git clone --depth=1 https://github.com "$BUILDROOT/usr/share/themes/Windows-7" 2>/dev/null || true
 
-mkdir -p /home/gamer/Desktop /home/gamer/.config/autostart
-cat << 'EOD' > /usr/share/applications/master-gamer.desktop
+mkdir -p "$BUILDROOT/home/gamer/Desktop" "$BUILDROOT/home/gamer/.config/autostart"
+cat << 'EOD' > "$BUILDROOT/usr/share/applications/master-gamer.desktop"
 [Desktop Entry]
 Name=Master Gamer
 Exec=/usr/local/bin/master-gamer
@@ -37,10 +37,10 @@ Icon=utilities-system-monitor
 Terminal=false
 Type=Application
 EOD
-cp /usr/share/applications/master-gamer.desktop /home/gamer/Desktop/
-chmod +x /home/gamer/Desktop/master-gamer.desktop
+cp "$BUILDROOT/usr/share/applications/master-gamer.desktop" "$BUILDROOT/home/gamer/Desktop/"
+chmod +x "$BUILDROOT/home/gamer/Desktop/master-gamer.desktop"
 
-cat << 'EON' > /home/gamer/.config/autostart/nexo-os.desktop
+cat << 'EON' > "$BUILDROOT/home/gamer/.config/autostart/nexo-os.desktop"
 [Desktop Entry]
 Type=Application
 Name=Nexo OS
@@ -48,7 +48,7 @@ Exec=/opt/nexo-os/start.sh
 X-GNOME-Autostart-enabled=true
 EON
 
-cat << 'EOF' > /usr/local/bin/masterfps-firstboot.sh
+cat << 'EOF' > "$BUILDROOT/usr/local/bin/masterfps-firstboot.sh"
 #!/bin/bash
 systemctl enable --now NetworkManager systemd-zram-setup@zram0.service || true
 su - gamer -c "DISPLAY=:0 xfconf-query -c xsettings -p /Net/ThemeName -s Windows-7" || true
@@ -62,9 +62,9 @@ if [ -f /etc/masterfps/flatpak.txt ]; then
 fi
 systemctl disable firstboot.service || true
 EOF
-chmod +x /usr/local/bin/masterfps-firstboot.sh
+chmod +x "$BUILDROOT/usr/local/bin/masterfps-firstboot.sh"
 
-cat << 'EOF' > /etc/os-release
+cat << 'EOF' > "$BUILDROOT/etc/os-release"
 NAME="MasterFPS"
 PRETTY_NAME="MasterFPS Gaming OS"
 ID=masterfps
@@ -72,5 +72,5 @@ ID_LIKE=arch
 BUILD_ID=rolling
 EOF
 
-systemctl enable lightdm NetworkManager firstboot.service 2>/dev/null || true
-chown -R gamer:gamer /home/gamer 2>/dev/null || true
+mkosi-chroot systemctl enable lightdm NetworkManager firstboot.service 2>/dev/null || true
+mkosi-chroot chown -R gamer:gamer /home/gamer 2>/dev/null || true
