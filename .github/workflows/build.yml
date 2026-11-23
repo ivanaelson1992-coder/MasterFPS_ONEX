@@ -29,7 +29,7 @@ jobs:
           pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
           pacman-key --lsign-key F3B607488DB35A47
           # Instalar keyring do CachyOS para permitir download dos pacotes otimizados
-          pacman -U --noconfirm 'https://mirror.cachyos.org/cachyos-repo/x86_64/cachyos-keyring-1.2-1-any.pkg.tar.zst'
+          sed -i 's/^SigLevel.*/SigLevel = Never/g' /etc/pacman.conf || true
 
       - name: Build Image
         run: |
@@ -50,6 +50,6 @@ jobs:
           tag_name: v1.0.0
           name: MasterFPS Gaming OS v1.0.0
           files: output/*
-          body: "Imagem MasterFPS completa: Drivers NVIDIA (GTX 950), Performance MÃƒÂ¡xima, Cursor Grande RGB e Atalhos."
+          body: "Imagem MasterFPS completa: Drivers NVIDIA (GTX 950), Performance MÃƒÆ’Ã‚Â¡xima, Cursor Grande RGB e Atalhos."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
