@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Repositorios Arch + CachyOS
+      - name: Configurar Repositorios Arch + Multilib
         run: |
           mkdir -p mkosi.sandbox/etc/pacman.d
           cp /etc/pacman.d/mirrorlist mkosi.sandbox/etc/pacman.d/mirrorlist
@@ -31,9 +31,6 @@ jobs:
           Architecture = auto
           SigLevel = Never
           ParallelDownloads = 5
-
-          [cachyos]
-          Server = https://cachyos.org
 
           [core]
           Include = /etc/pacman.d/mirrorlist

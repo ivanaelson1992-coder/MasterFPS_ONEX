@@ -1,5 +1,5 @@
 # Base sistema
-base linux-cachyos linux-cachyos-headers linux-firmware
+base linux-zen linux-zen-headers linux-firmware
 base-devel git wget curl zstd lz4 btrfs-progs dosfstools e2fsprogs
 networkmanager network-manager-applet nm-connection-editor
 bluez bluez-utils blueman
