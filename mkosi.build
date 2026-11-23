@@ -1,11 +1,21 @@
 #!/bin/bash
 set -euo pipefail
 
-# Add CachyOS repositories if not already present
-if ! grep -q "\[cachyos\]" /etc/pacman.conf; then
+# Configurar repositórios CachyOS diretamente no pacman.conf do build
 cat >> /etc/pacman.conf <<'EOF'
 
 [cachyos]
-Include = /etc/pacman.d/cachyos-mirrorlist
+Server = https://mirror.cachyos.org/$repo/$arch
+SigLevel = Optional TrustAll
+
+[cachyos-v3]
+Server = https://mirror.cachyos.org/$repo/v3/$arch
+SigLevel = Optional TrustAll
+
+[chaotic-aur]
+Server = https://geo-mirror.chaotic.cx/$repo/$arch
+SigLevel = Optional TrustAll
 EOF
-fi
+
+# Sincronizar
+pacman -Sy --noconfirm

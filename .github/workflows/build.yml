@@ -1,106 +1,48 @@
 name: Build MasterFPS ISO
-
 on:
   push:
     branches: [ main ]
-    tags: ['v*']
   workflow_dispatch:
-
-permissions:
-  contents: write
-  packages: write
-  id-token: write
-
-env:
-  ISO_NAME: MasterFPS
 
 jobs:
   build:
-    name: Build ISO (x86_64)
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-          sudo apt-get clean
-
-      - name: Install dependencies & mkosi
+      - name: Instalar Dependencias
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            systemd systemd-container systemd-boot \
-            arch-install-scripts pacman \
-            zstd squashfs-tools xorriso mtools dosfstools \
-            python3-pip qemu-utils grub-efi-amd64-bin grub-pc-bin || true
+          sudo apt-get install -y arch-install-scripts pacman-package-manager xorriso mtools dosfstools zstd systemd-container python3-pip
           sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
-          mkosi --version
 
-      - name: Initialize Arch/CachyOS keyring
+      - name: Configurar Chaves Arch
         run: |
           sudo mkdir -p /etc/pacman.d/gnupg
-          sudo pacman-key --init || true
+          sudo pacman-key --init
           sudo pacman-key --populate archlinux || true
 
-      - name: Make scripts executable
-        run: |
-          chmod +x mkosi.build mkosi.postinst files/usr/libexec/firstboot-setup || true
-
-      - name: Build ISO with mkosi
+      - name: Build ISO
         run: |
           mkdir -p output
-          sudo mkosi --force --output-dir=output
+          chmod +x mkosi.build mkosi.postinst
+          sudo mkosi --force --output-dir=output --format=iso
 
-      - name: Verify & Hash ISO
-        run: |
-          ls -lh output/
-          if [ -f "output/MasterFPS.iso" ]; then
-            sha256sum output/MasterFPS.iso > MasterFPS.sha256
-            cat MasterFPS.sha256
-          fi
-
-      - name: Split ISO (1.9GB parts)
-        run: |
-          if [ -f "output/MasterFPS.iso" ]; then
-            cd output
-            split -b 1900M MasterFPS.iso MasterFPS.iso.part-
-            ls -lh MasterFPS.iso.part-*
-          fi
-
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          name: MasterFPS ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
-          body: |
-            ## 🎮 MasterFPS Gaming OS (ISO Completa)
-
-            **Otimizações inclusas:**
-            - Kernel **CachyOS** (BORE scheduler, LTO, x86-64-v3/v4)
-            - **NVIDIA GTX 950** (Driver 550+ DKMS + 32-bit + persistence)
-            - **Modo Gamer / Performance Máxima**: Gamemode, tuned, power-profiles-daemon, mitigations=off
-            - **Atalhos na Área de Trabalho**: Steam, Firefox, VS Code, FreeLLMAPI, OpenCode
-            - **Cursor Grande Breeze** (48px)
-            
-            ### 📥 Como instalar
-            1. Baixe todas as partes `MasterFPS.iso.part-*`
-            2. Junte: `cat MasterFPS.iso.part-* > MasterFPS.iso`
-            3. Grave no USB (Rufus no modo DD ou `dd` no Linux)
-          files: |
-            output/MasterFPS.iso.part-*
-            MasterFPS.sha256
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload ISO Artifact
+      - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: MasterFPS-iso
-          path: output/*
-          retention-days: 30
+          name: MasterFPS-ISO
+          path: output/*.iso
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: MasterFPS Gaming OS v1.0.0
+          files: output/*.iso
+          body: "ISO MasterFPS completa: Drivers NVIDIA (GTX 950), Performance Máxima, Cursor Grande RGB e Atalhos."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

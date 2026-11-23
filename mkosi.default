@@ -9,105 +9,15 @@ Bootable=yes
 
 [Content]
 Packages=
-  base
-  linux-cachyos
-  linux-cachyos-headers
-  linux-firmware
-  base-devel
-  git
-  wget
-  curl
-  zstd
-  lz4
-  btrfs-progs
-  dosfstools
-  e2fsprogs
-  networkmanager
-  network-manager-applet
-  nm-connection-editor
-  bluez
-  bluez-utils
-  blueman
-  pipewire
-  pipewire-pulse
-  pipewire-alsa
-  pipewire-jack
-  wireplumber
-  alsa-utils
-  pavucontrol
-  ananicy-cpp
-  tuned
-  sudo
-  polkit
-  gnome-keyring
-  seahorse
-  vim
-  nano
-  htop
-  btop
-  fastfetch
-  neofetch
-  power-profiles-daemon
-  cpupower
-  breeze-icons
-  sddm
-  foot
-  mesa
-  lib32-mesa
-  vulkan-radeon
-  lib32-vulkan-radeon
-  radeontop
-  amdgpu_top
-  vulkan-intel
-  lib32-vulkan-intel
-  intel-gpu-tools
-  intel-media-driver
-  intel-compute-runtime
-  libva-intel-driver
-  intel-ucode
-  nvidia-dkms
-  nvidia-utils
-  lib32-nvidia-utils
-  nvidia-settings
-  libva-nvidia-driver
-  nvtop
-  cuda
-  cudnn
-  sof-firmware
-  alsa-firmware
-  iw
-  wpa_supplicant
-  steam-native-runtime
-  wine-wow64
-  giflib
-  lib32-giflib
-  gnutls
-  lib32-gnutls
-  v4l-utils
-  lib32-v4l-utils
-  libpng
-  lib32-libpng
-  libldap
-  lib32-libldap
-  gst-plugins-base-libs
-  lib32-gst-plugins-base-libs
-  vulkan-icd-loader
-  lib32-vulkan-icd-loader
-  sdl2
-  lib32-sdl2
-  gamescope
-  mangohud
-  gamemode
-  lib32-gamemode
-  dxvk
-  vkd3d
-  vkd3d-proton
-  lutris
-  flatpak
-  flatpak-builder
+  base linux-cachyos linux-firmware base-devel git wget curl zstd
+  networkmanager bluez bluez-utils pipewire pipewire-pulse alsa-utils
+  sudo vim nano htop btop fastfetch sddm foot flatpak
+  mesa lib32-mesa vulkan-radeon vulkan-intel intel-ucode
+  nvidia-dkms nvidia-utils lib32-nvidia-utils nvidia-settings libva-nvidia-driver
+  steam-native-runtime gamescope mangohud gamemode
+  breeze-icons power-profiles-daemon cpupower ananicy-cpp tuned
 
 WithNetwork=yes
 Locale=pt_BR.UTF-8
 Timezone=America/Sao_Paulo
-KeyboardLayout=br-abnt2
-Hostname=gaming-os
+Hostname=master-fps
