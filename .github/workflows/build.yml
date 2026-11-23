@@ -15,7 +15,7 @@ jobs:
       - name: Instalar Dependencias
         run: |
           sudo apt-get update
-          sudo apt-get install -y arch-install-scripts pacman-package-manager xorriso mtools dosfstools zstd systemd-container python3-pip
+          sudo apt-get install -y arch-install-scripts pacman xorriso mtools dosfstools zstd systemd-container python3-pip systemd-boot
           sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
 
       - name: Configurar Chaves Arch
@@ -24,17 +24,18 @@ jobs:
           sudo pacman-key --init
           sudo pacman-key --populate archlinux || true
 
-      - name: Build ISO
+      - name: Build Image
         run: |
           mkdir -p output
           chmod +x mkosi.build mkosi.postinst
-          sudo mkosi --force --output-dir=output --format=iso
+          # Usando o comando moderno 'build' do mkosi
+          sudo mkosi --force --output-dir=output build
 
-      - name: Upload ISO
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MasterFPS-ISO
-          path: output/*.iso
+          name: MasterFPS-Image
+          path: output/*
 
       - name: Create Release
         if: github.ref == 'refs/heads/main'
@@ -42,7 +43,7 @@ jobs:
         with:
           tag_name: v1.0.0
           name: MasterFPS Gaming OS v1.0.0
-          files: output/*.iso
-          body: "ISO MasterFPS completa: Drivers NVIDIA (GTX 950), Performance Máxima, Cursor Grande RGB e Atalhos."
+          files: output/*
+          body: "Imagem MasterFPS completa: Drivers NVIDIA (GTX 950), Performance MÃ¡xima, Cursor Grande RGB e Atalhos."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

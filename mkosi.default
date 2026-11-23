@@ -3,8 +3,8 @@ Distribution=arch
 Release=rolling
 
 [Output]
-Format=iso
-Output=MasterFPS.iso
+Format=disk
+Output=MasterFPS.img
 Bootable=yes
 
 [Content]
