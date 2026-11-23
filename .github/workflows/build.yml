@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Repositorios Arch + Chaotic-AUR (CachyOS Kernel)
+      - name: Configurar Repositorios Arch + CachyOS
         run: |
           mkdir -p mkosi.sandbox/etc/pacman.d
           cp /etc/pacman.d/mirrorlist mkosi.sandbox/etc/pacman.d/mirrorlist
@@ -32,6 +32,9 @@ jobs:
           SigLevel = Never
           ParallelDownloads = 5
 
+          [cachyos]
+          Server = https://cachyos.org
+
           [core]
           Include = /etc/pacman.d/mirrorlist
 
@@ -40,9 +43,6 @@ jobs:
 
           [multilib]
           Include = /etc/pacman.d/mirrorlist
-
-          [chaotic-aur]
-          Server = https://chaotic.cx
           EOF
           cp mkosi.sandbox/etc/pacman.conf /etc/pacman.conf
 
