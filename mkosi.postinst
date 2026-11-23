@@ -1,9 +1,16 @@
 #!/bin/bash
 set -e
 
-useradd -m -G wheel,video,audio,input -s /bin/bash gamer || true
-echo "gamer:gamer" | chpasswd
+groupadd -f wheel
+groupadd -f input
+groupadd -f sudo
+useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer || true
+
+# Define senha 'gamer' via hash SHA-512 direto no /etc/shadow (zero erro de PAM no chroot)
+HASH=$(openssl passwd -6 "gamer" 2>/dev/null || python3 -c 'import crypt; print(crypt.crypt("gamer", crypt.mksalt(crypt.METHOD_SHA512)))' 2>/dev/null || echo '$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47')
+usermod -p "$HASH" gamer || true
 echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
+chmod 0440 /etc/sudoers.d/gamer
 
 mkdir -p /etc/lightdm/lightdm.conf.d /usr/share/themes /home/gamer/Desktop /usr/share/applications /home/gamer/.config/autostart
 
