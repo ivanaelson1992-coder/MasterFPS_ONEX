@@ -82,3 +82,10 @@ Packages=
     nvidia-utils
     lib32-nvidia-utils
     nvidia-settings
+    power-profiles-daemon
+    breeze-cursors
+    adwaita-cursors
+    xcursor-themes
+    gnome-themes-extra
+    kvantum-qt5
+    kvantum-qt6

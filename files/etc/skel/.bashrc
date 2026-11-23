@@ -1,16 +1,20 @@
-# Aliases gaming
-alias steam='flatpak run com.valvesoftware.Steam'
-alias lutris='flatpak run net.lutris.Lutris'
-alias heroic='flatpak run com.heroicgameslauncher.hgl'
-alias bottles='flatpak run com.usebottles.bottles'
-alias mangohud='mangohud --gpu_stats --cpu_stats --ram --vram --fps_limit=0'
-alias gamemode='gamemoderun'
+# ~/.bashrc
 
-# Sistema
-alias update='sudo pacman -Syu && flatpak update -y'
-alias cleanup='sudo pacman -Sc && flatpak uninstall --unused -y && journalctl --vacuum-time=7d'
-alias kernel='uname -r && pacman -Q linux-cachyos'
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
 
-# Hardware
-alias gpu='watch -n1 nvidia-smi || watch -n1 radeontop'
-alias cpu='watch -n1 "cat /proc/cpuinfo | grep MHz"'
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias ll='ls -la'
+alias la='ls -A'
+alias l='ls -CF'
+
+PS1='[\u@\h \W]\$ '
+
+# Gaming optimizations
+export MANGOHUD=1
+export MANGOHUD_CONFIG=font_size=24,position=top-right
+export GAMESCOPE_GAMING=1
+
+# Flatpak
+export PATH="/var/lib/flatpak/exports/bin:$PATH"
