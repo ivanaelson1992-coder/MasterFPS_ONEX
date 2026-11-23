@@ -8,34 +8,43 @@ if [ -f "packages/flatpak.txt" ]; then
     cp packages/flatpak.txt "$DESTDIR/etc/masterfps/flatpak.txt"
 fi
 
+# Gera Wallpaper PNG 1920x1080 usando apenas Python nativo (zlib/struct - zero PIL)
 python3 - << 'EOP'
-from PIL import Image, ImageDraw
-import os
+import zlib, struct, os
 
 W, H = 1920, 1080
-img = Image.new("RGB", (W, H), "#0b0c10")
-draw = ImageDraw.Draw(img)
-
+raw = bytearray()
 for y in range(H):
-    draw.line([(0, y), (W, y)], fill=(int(11+(y/H)*35), int(12+(y/H)*10), int(16+(y/H)*20)))
+    raw.append(0)
+    r = int(15 + (y / H) * 45)
+    g = int(10 + (y / H) * 10)
+    b = int(20 + (y / H) * 25)
+    row = bytes([r, g, b]) * W
+    raw.extend(row)
 
-cx, cy = W // 2, H // 2 - 40
-draw.polygon([(cx, cy+40), (cx-420, cy-180), (cx-260, cy+60), (cx-120, cy+120)], fill="#ff4500")
-draw.polygon([(cx, cy+40), (cx+420, cy-180), (cx+260, cy+60), (cx+120, cy+120)], fill="#ff4500")
-draw.polygon([(cx, cy+20), (cx-280, cy-110), (cx-180, cy+50)], fill="#ff8c00")
-draw.polygon([(cx, cy+20), (cx+280, cy-110), (cx+180, cy+50)], fill="#ff8c00")
-draw.polygon([(cx, cy-130), (cx-45, cy+40), (cx, cy+220), (cx+45, cy+40)], fill="#ffd700")
-draw.text((cx - 100, cy + 250), "MASTER FPS", fill="#ffffff")
+def png_chunk(tag, data):
+    return struct.pack("!I", len(data)) + tag + data + struct.pack("!I", zlib.crc32(tag + data) & 0xffffffff)
+
+png = b"\x89PNG\r\n\x1a\n"
+png += png_chunk(b"IHDR", struct.pack("!IIBBBBB", W, H, 8, 2, 0, 0, 0))
+png += png_chunk(b"IDAT", zlib.compress(bytes(raw), 6))
+png += png_chunk(b"IEND", b"")
 
 out_path = os.path.join(os.environ.get("DESTDIR", ""), "usr/share/backgrounds/masterfps-fenix.png")
-img.save(out_path)
+with open(out_path, "wb") as f:
+    f.write(png)
 EOP
 
 cat << 'EOG' > "$DESTDIR/usr/local/bin/master-gamer"
 #!/usr/bin/env python3
-import sys, os, psutil
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
-from PyQt6.QtCore import QTimer, Qt
+import sys, os
+try:
+    import psutil
+    from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
+    from PyQt6.QtCore import QTimer, Qt
+except ImportError:
+    os.system("xmessage 'Master Gamer: Execute sudo pacman -S python-pyqt6 python-psutil'")
+    sys.exit(0)
 
 class MasterGamer(QWidget):
     def __init__(self):
