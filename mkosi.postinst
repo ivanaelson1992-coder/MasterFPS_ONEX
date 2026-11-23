@@ -3,13 +3,13 @@ set -e
 
 mkdir -p "$BUILDROOT/etc/sudoers.d" "$BUILDROOT/etc/lightdm/lightdm.conf.d" "$BUILDROOT/usr/share/themes" "$BUILDROOT/usr/share/applications" "$BUILDROOT/usr/local/bin"
 
-mkosi-chroot groupadd -f wheel
-mkosi-chroot groupadd -f input
-mkosi-chroot groupadd -f sudo
-mkosi-chroot useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer 2>/dev/null || mkosi-chroot useradd -m -s /bin/bash gamer || true
+chroot "$BUILDROOT" groupadd -f wheel
+chroot "$BUILDROOT" groupadd -f input
+chroot "$BUILDROOT" groupadd -f sudo
+chroot "$BUILDROOT" useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer 2>/dev/null || chroot "$BUILDROOT" useradd -m -s /bin/bash gamer || true
 
 HASH='$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47'
-mkosi-chroot usermod -p "$HASH" gamer 2>/dev/null || true
+chroot "$BUILDROOT" usermod -p "$HASH" gamer 2>/dev/null || true
 
 echo "gamer ALL=(ALL) NOPASSWD: ALL" > "$BUILDROOT/etc/sudoers.d/gamer"
 chmod 0440 "$BUILDROOT/etc/sudoers.d/gamer"
@@ -72,5 +72,5 @@ ID_LIKE=arch
 BUILD_ID=rolling
 EOF
 
-mkosi-chroot systemctl enable lightdm NetworkManager firstboot.service 2>/dev/null || true
-mkosi-chroot chown -R gamer:gamer /home/gamer 2>/dev/null || true
+chroot "$BUILDROOT" systemctl enable lightdm NetworkManager firstboot.service 2>/dev/null || true
+chroot "$BUILDROOT" chown -R gamer:gamer /home/gamer 2>/dev/null || true
