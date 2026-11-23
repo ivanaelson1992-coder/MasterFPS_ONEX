@@ -6,21 +6,15 @@ useradd -m -G wheel,video,audio,input -s /bin/bash gamer
 echo "gamer:gamer" | chpasswd
 echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
 
-# Criar pastas essenciais
-mkdir -p /home/gamer/Desktop /usr/share/applications
+# Habilitar servicos basicos
+systemctl enable lightdm NetworkManager firstboot.service || true
 
-# Criar atalho simples para terminal
-cat << 'EOD' > /usr/share/applications/master-gamer.desktop
-[Desktop Entry]
-Name=Master Gamer
-Exec=xfce4-terminal
-Icon=utilities-system-monitor
-Terminal=false
-Type=Application
-EOD
-cp /usr/share/applications/master-gamer.desktop /home/gamer/Desktop/
-chmod +x /home/gamer/Desktop/master-gamer.desktop
+# Configurar autologin para lightdm
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/autologin.conf <<'EOF'
+[Seat:*]
+autologin-user=gamer
+autologin-user-timeout=0
+EOF
 
-# Habilitar servicos básicos
-systemctl enable lightdm NetworkManager || true
 chown -R gamer:gamer /home/gamer

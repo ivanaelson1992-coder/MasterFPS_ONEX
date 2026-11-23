@@ -14,42 +14,50 @@ pacman -Sy --noconfirm
 # Atualiza tudo
 pacman -Syu --noconfirm
 
-# Confiar arquivos .desktop do usuário gaming
-for f in /home/gaming/Desktop/*.desktop; do
+# Configurar flatpak e flathub
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# Instalar apps flatpak necessarios
+flatpak install -y flathub com.valvesoftware.Steam
+flatpak install -y flathub org.mozilla.firefox
+flatpak install -y flathub com.visualstudio.code
+
+# Confiar arquivos .desktop do usuario gamer
+for f in /home/gamer/Desktop/*.desktop; do
     [ -f "$f" ] && gio set "$f" metadata::trusted true 2>/dev/null || true
 done
 
 # Aplicar power profile performance
 powerprofilesctl set performance 2>/dev/null || true
 
-# Configurar cursor grande para o usuário gaming
-mkdir -p /home/gaming/.config/gtk-3.0
-cat > /home/gaming/.config/gtk-3.0/settings.ini <<'EOF'
+# Configurar cursor grande para o usuario gamer
+mkdir -p /home/gamer/.config/gtk-3.0
+cat > /home/gamer/.config/gtk-3.0/settings.ini <<'EOF'
 [Settings]
 gtk-cursor-theme-name=breeze_cursors
 gtk-cursor-theme-size=48
 EOF
 
-mkdir -p /home/gaming/.config/gtk-4.0
-cat > /home/gaming/.config/gtk-4.0/settings.ini <<'EOF'
+mkdir -p /home/gamer/.config/gtk-4.0
+cat > /home/gamer/.config/gtk-4.0/settings.ini <<'EOF'
 [Settings]
 gtk-cursor-theme-name=breeze_cursors
 gtk-cursor-theme-size=48
 EOF
 
-# Variáveis de ambiente do cursor
-mkdir -p /home/gaming/.config/environment.d
-cat > /home/gaming/.config/environment.d/99-cursor.conf <<'EOF'
+# Variaveis de ambiente do cursor
+mkdir -p /home/gamer/.config/environment.d
+cat > /home/gamer/.config/environment.d/99-cursor.conf <<'EOF'
 XCURSOR_SIZE=48
 XCURSOR_THEME=breeze_cursors
 WAYLAND_CURSOR_SIZE=48
 WAYLAND_CURSOR_THEME=breeze_cursors
 EOF
 
-chown -R gaming:gaming /home/gaming/.config
+chown -R gamer:gamer /home/gamer/.config
 
-# Marca firstboot concluído
+# Marca firstboot concluido
 touch /etc/.firstboot_done
 
-# Reboot se necessário
+# Reboot se necessario
 systemctl reboot

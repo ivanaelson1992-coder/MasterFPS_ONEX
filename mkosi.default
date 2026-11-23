@@ -30,6 +30,9 @@ Packages=
     networkmanager
     zram-generator
     sudo
+    bluez
+    bluez-utils
+    blueman
     nano
     bash-completion
     xorg-server
@@ -72,3 +75,10 @@ Packages=
     pipewire-pulse
     pipewire-jack
     wireplumber
+    foot
+    breeze-gtk
+    kitty-terminfo
+    nvidia-dkms
+    nvidia-utils
+    lib32-nvidia-utils
+    nvidia-settings
