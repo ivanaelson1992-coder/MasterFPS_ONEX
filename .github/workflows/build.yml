@@ -1,5 +1,4 @@
 name: Build MasterFPS ISO
-
 on:
   push:
     branches: [ main ]
@@ -12,47 +11,23 @@ jobs:
       image: archlinux:latest
       options: --privileged
     steps:
-      - name: Instalar Git e Dependencias no Arch
+      - name: Instalar Dependencias
         run: |
-          pacman-key --init
-          pacman-key --populate archlinux
-          pacman -Syu --noconfirm --needed git mkosi arch-install-scripts squashfs-tools libisoburn mtools dosfstools python edk2-ovmf cpio zstd tar xz gzip bzip2 cpio
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm git python python-pip arch-install-scripts squashfs-tools libisoburn mtools dosfstools zstd systemd mkosi cpio tar xz gzip bzip2 \
+            python-pefile python-psutil python-pyqt6 python-pillow
+          pip install --break-system-packages git+https://github.com/systemd/mkosi.git
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Repositorios Arch + Multilib
-        run: |
-          mkdir -p mkosi.sandbox/etc/pacman.d
-          cp /etc/pacman.d/mirrorlist mkosi.sandbox/etc/pacman.d/mirrorlist
-          cat << 'EOF' > mkosi.sandbox/etc/pacman.conf
-          [options]
-          HoldPkg = pacman glibc
-          Architecture = auto
-          SigLevel = Never
-          ParallelDownloads = 5
-
-          [core]
-          Include = /etc/pacman.d/mirrorlist
-
-          [extra]
-          Include = /etc/pacman.d/mirrorlist
-
-          [multilib]
-          Include = /etc/pacman.d/mirrorlist
-          EOF
-          cp mkosi.sandbox/etc/pacman.conf /etc/pacman.conf
-
       - name: Build MasterFPS
         run: |
           chmod +x mkosi.build mkosi.postinst
-          mkosi --force
+          mkosi --force build
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MasterFPS-x86_64-Image
-          path: |
-            out/*
-            *.raw*
-            *.iso*
+          name: MasterFPS-Image
+          path: out/*
