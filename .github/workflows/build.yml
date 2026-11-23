@@ -23,7 +23,7 @@ jobs:
 
       - name: Configurar Repositorio CachyOS
         run: |
-          mkdir -p mkosi.sandbox/etc
+          mkdir -p mkosi.sandbox/etc/pacman.d && cp /etc/pacman.d/mirrorlist mkosi.sandbox/etc/pacman.d/mirrorlist
           cat << 'EOF' > mkosi.sandbox/etc/pacman.conf
           [options]
           HoldPkg = pacman glibc
