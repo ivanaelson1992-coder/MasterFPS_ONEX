@@ -21,16 +21,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug mkosi config
-        run: |
-          mkosi --help
-          mkosi --version
-          ls -la
-
       - name: Build MasterFPS
         run: |
           chmod +x mkosi.build mkosi.postinst
-          mkosi --force 2>&1 | head -100
+          mkosi --force build
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
