@@ -1,7 +1,7 @@
 [Distribution]
 Distribution=arch
 Architecture=x86-64
-Repositories=cachyos,core,extra,multilib
+Repositories=core,extra,multilib
 
 [Output]
 Format=disk
@@ -12,6 +12,7 @@ CompressOutput=zstd
 [Content]
 Bootable=yes
 Bootloader=systemd-boot
+UnifiedKernelImages=no
 Hostname=masterfps
 Timezone=America/Fortaleza
 Locale=pt_BR.UTF-8
@@ -20,8 +21,8 @@ RootPassword=gamer
 SkeletonTrees=files
 Packages=
     base
-    linux-cachyos
-    linux-cachyos-headers
+    linux-zen
+    linux-zen-headers
     linux-firmware
     amd-ucode
     intel-ucode
