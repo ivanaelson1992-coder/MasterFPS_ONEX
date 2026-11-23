@@ -1,74 +1,26 @@
 #!/bin/bash
 set -e
 
-mkdir -p "$BUILDROOT/etc/sudoers.d" "$BUILDROOT/etc/lightdm/lightdm.conf.d" "$BUILDROOT/usr/share/themes" "$BUILDROOT/usr/share/applications" "$BUILDROOT/usr/local/bin" "$BUILDROOT/home/gamer/Desktop" "$BUILDROOT/home/gamer/.config/autostart" "$BUILDROOT/etc/systemd/system/multi-user.target.wants" "$BUILDROOT/etc/systemd/system/graphical.target.wants"
+# Criar usuario
+useradd -m -G wheel,video,audio,input -s /bin/bash gamer
+echo "gamer:gamer" | chpasswd
+echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
 
-# Cria usuario gamer diretamente nos arquivos do sistema (zero erro de chroot/PAM)
-grep -q "^gamer:" "$BUILDROOT/etc/passwd" || echo "gamer:x:1000:1000:MasterFPS Gamer:/home/gamer:/bin/bash" >> "$BUILDROOT/etc/passwd"
-grep -q "^gamer:" "$BUILDROOT/etc/group" || echo "gamer:x:1000:" >> "$BUILDROOT/etc/group"
-grep -q "^gamer:" "$BUILDROOT/etc/shadow" || echo 'gamer:$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47:19000:0:99999:7:::' >> "$BUILDROOT/etc/shadow"
+# Criar pastas essenciais
+mkdir -p /home/gamer/Desktop /usr/share/applications
 
-echo "gamer ALL=(ALL) NOPASSWD: ALL" > "$BUILDROOT/etc/sudoers.d/gamer"
-chmod 0440 "$BUILDROOT/etc/sudoers.d/gamer"
-
-cat << 'EOL' > "$BUILDROOT/etc/lightdm/lightdm.conf.d/10-autologin.conf"
-[Seat:*]
-autologin-user=gamer
-autologin-user-timeout=0
-user-session=xfce
-EOL
-
-cat << 'EOL' > "$BUILDROOT/etc/lightdm/lightdm-gtk-greeter.conf"
-[greeter]
-background=/usr/share/backgrounds/masterfps-fenix.png
-EOL
-
-cat << 'EOD' > "$BUILDROOT/usr/share/applications/master-gamer.desktop"
+# Criar atalho simples para terminal
+cat << 'EOD' > /usr/share/applications/master-gamer.desktop
 [Desktop Entry]
 Name=Master Gamer
-Exec=/usr/local/bin/master-gamer
+Exec=xfce4-terminal
 Icon=utilities-system-monitor
 Terminal=false
 Type=Application
 EOD
-cp "$BUILDROOT/usr/share/applications/master-gamer.desktop" "$BUILDROOT/home/gamer/Desktop/"
-chmod +x "$BUILDROOT/home/gamer/Desktop/master-gamer.desktop"
+cp /usr/share/applications/master-gamer.desktop /home/gamer/Desktop/
+chmod +x /home/gamer/Desktop/master-gamer.desktop
 
-cat << 'EON' > "$BUILDROOT/home/gamer/.config/autostart/nexo-os.desktop"
-[Desktop Entry]
-Type=Application
-Name=Nexo OS
-Exec=/opt/nexo-os/start.sh
-X-GNOME-Autostart-enabled=true
-EON
-
-cat << 'EOF' > "$BUILDROOT/usr/local/bin/masterfps-firstboot.sh"
-#!/bin/bash
-systemctl enable --now NetworkManager systemd-zram-setup@zram0.service || true
-chown -R 1000:1000 /home/gamer || true
-su - gamer -c "DISPLAY=:0 xfconf-query -c xsettings -p /Net/ThemeName -s Windows-7" || true
-su - gamer -c "DISPLAY=:0 xfconf-query -c xfwm4 -p /general/theme -s Windows-7" || true
-su - gamer -c "DISPLAY=:0 xfconf-query -c xfwm4 -p /general/use_compositing -s false" || true
-su - gamer -c "DISPLAY=:0 xfconf-query -c xfce4-panel -p /panels/panel-1/size -s 40" || true
-su - gamer -c "DISPLAY=:0 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /usr/share/backgrounds/masterfps-fenix.png" || true
-flatpak remote-add --if-not-exists flathub https://flathub.org || true
-if [ -f /etc/masterfps/flatpak.txt ]; then
-    while read -r app; do [ -n "$app" ] && flatpak install -y flathub "$app" || true; done < /etc/masterfps/flatpak.txt
-fi
-systemctl disable firstboot.service || true
-EOF
-chmod +x "$BUILDROOT/usr/local/bin/masterfps-firstboot.sh"
-
-cat << 'EOF' > "$BUILDROOT/etc/os-release"
-NAME="MasterFPS"
-PRETTY_NAME="MasterFPS Gaming OS"
-ID=masterfps
-ID_LIKE=arch
-BUILD_ID=rolling
-EOF
-
-# Habilita servicos via symlinks diretos (funciona 100% no sandbox do mkosi v27)
-ln -sf /usr/lib/systemd/system/firstboot.service "$BUILDROOT/etc/systemd/system/multi-user.target.wants/firstboot.service"
-ln -sf /usr/lib/systemd/system/lightdm.service "$BUILDROOT/etc/systemd/system/display-manager.service"
-
-chown -R 1000:1000 "$BUILDROOT/home/gamer"
+# Habilitar servicos básicos
+systemctl enable lightdm NetworkManager || true
+chown -R gamer:gamer /home/gamer
