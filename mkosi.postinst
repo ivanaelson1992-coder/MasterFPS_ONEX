@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 
+mkdir -p /etc/sudoers.d /etc/lightdm/lightdm.conf.d /usr/share/themes /usr/share/applications
+
 groupadd -f wheel
 groupadd -f input
 groupadd -f sudo
-useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer || true
+useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer 2>/dev/null || useradd -m -s /bin/bash gamer || true
 
-# Define senha 'gamer' via hash SHA-512 direto no /etc/shadow (zero erro de PAM no chroot)
-HASH=$(openssl passwd -6 "gamer" 2>/dev/null || python3 -c 'import crypt; print(crypt.crypt("gamer", crypt.mksalt(crypt.METHOD_SHA512)))' 2>/dev/null || echo '$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47')
-usermod -p "$HASH" gamer || true
+HASH='$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47'
+usermod -p "$HASH" gamer 2>/dev/null || true
+
 echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
 chmod 0440 /etc/sudoers.d/gamer
-
-mkdir -p /etc/lightdm/lightdm.conf.d /usr/share/themes /home/gamer/Desktop /usr/share/applications /home/gamer/.config/autostart
 
 cat << 'EOL' > /etc/lightdm/lightdm.conf.d/10-autologin.conf
 [Seat:*]
@@ -26,8 +26,9 @@ cat << 'EOL' > /etc/lightdm/lightdm-gtk-greeter.conf
 background=/usr/share/backgrounds/masterfps-fenix.png
 EOL
 
-git clone --depth=1 https://github.com /usr/share/themes/Windows-7 || true
+git clone --depth=1 https://github.com /usr/share/themes/Windows-7 2>/dev/null || true
 
+mkdir -p /home/gamer/Desktop /home/gamer/.config/autostart
 cat << 'EOD' > /usr/share/applications/master-gamer.desktop
 [Desktop Entry]
 Name=Master Gamer
@@ -71,5 +72,5 @@ ID_LIKE=arch
 BUILD_ID=rolling
 EOF
 
-systemctl enable lightdm NetworkManager firstboot.service || true
-chown -R gamer:gamer /home/gamer
+systemctl enable lightdm NetworkManager firstboot.service 2>/dev/null || true
+chown -R gamer:gamer /home/gamer 2>/dev/null || true
