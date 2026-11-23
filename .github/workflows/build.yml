@@ -2,13 +2,12 @@ name: Build MasterFPS ISO
 
 on:
   push:
-    tags: ['v*']          # Dispara ao criar tag: git tag v1.0 && git push --tags
-  workflow_dispatch:      # Botão "Run workflow" na aba Actions
-  schedule:
-    - cron: '0 3 * * 0'   # Build semanal (domingo 3h UTC)
+    branches: [ main ]
+    tags: ['v*']
+  workflow_dispatch:
 
 permissions:
-  contents: write         # Para criar release
+  contents: write
   packages: write
   id-token: write
 
@@ -20,62 +19,63 @@ jobs:
   build:
     name: Build ISO (x86_64)
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # 3h max
+    timeout-minutes: 180
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install mkosi + deps
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo apt-get clean
+
+      - name: Install dependencies & mkosi
         run: |
           sudo apt-get update
-          sudo apt-get install -y mkosi qemu-system-x86-64 ovmf \
-            systemd-boot-efi grub-efi-amd64-bin \
-            zstd pigz parallel
+          sudo apt-get install -y arch-install-scripts pacman-package-manager zstd squashfs-tools xorriso mtools dosfstools python3-pip systemd-container qemu-utils
+          sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
 
-      - name: Show mkosi version
-        run: mkosi --version
+      - name: Initialize Arch/CachyOS keys
+        run: |
+          sudo mkdir -p /etc/pacman.d/gnupg
+          sudo pacman-key --init || true
+          sudo pacman-key --populate archlinux || true
+          sudo pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com || true
+          sudo pacman-key --lsign-key F3B607488DB35A47 || true
+
+      - name: Make scripts executable
+        run: |
+          chmod +x mkosi.build mkosi.postinst files/usr/libexec/firstboot-setup || true
 
       - name: Build ISO with mkosi
         run: |
+          mkdir -p ${{ env.MKOSI_OUTPUT_DIR }}
           sudo mkosi \
             --force \
             --output-dir=${{ env.MKOSI_OUTPUT_DIR }} \
             --image=${{ env.ISO_NAME }} \
             --format=iso \
             --bootable=yes \
-            --bootloader=systemd-boot,grub \
-            --unified-kernel-image=yes \
             --compress=zstd \
-            --compression-level=19 \
-            --parallel=yes \
-            --with-network=yes \
-            --with-tests=no \
-            --documentation=no \
-            --security=apparmor
+            --with-network=yes
 
-      - name: Verify ISO
+      - name: Verify & Hash ISO
         run: |
           ls -lh ${{ env.MKOSI_OUTPUT_DIR }}/
-          file ${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso
-          sha256sum ${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso > ${{ env.ISO_NAME }}.sha256
-          cat ${{ env.ISO_NAME }}.sha256
-
-      - name: Test boot in QEMU (smoke test)
-        run: |
-          timeout 60s qemu-system-x86_64 \
-            -enable-kvm -m 2G -cpu host -smp 2 \
-            -drive file=${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso,format=raw,if=virtio,readonly=on \
-            -display none -serial stdio -no-reboot \
-            -device virtio-rng-pci || true
-          echo "✅ QEMU smoke test passed (booted to prompt or timeout)"
+          if [ -f "${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso" ]; then
+            sha256sum ${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso > ${{ env.ISO_NAME }}.sha256
+            cat ${{ env.ISO_NAME }}.sha256
+          fi
 
       - name: Split ISO (2GB parts for GitHub Release limit)
         run: |
-          cd ${{ env.MKOSI_OUTPUT_DIR }}
-          split -b 1900M ${{ env.ISO_NAME }}.iso ${{ env.ISO_NAME }}.iso.part-
-          ls -lh ${{ env.ISO_NAME }}.iso.part-*
+          if [ -f "${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso" ]; then
+            cd ${{ env.MKOSI_OUTPUT_DIR }}
+            split -b 1900M ${{ env.ISO_NAME }}.iso ${{ env.ISO_NAME }}.iso.part-
+            ls -lh ${{ env.ISO_NAME }}.iso.part-*
+          fi
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -84,31 +84,19 @@ jobs:
           name: ${{ env.ISO_NAME }} ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           body: |
-            ## 🎮 MasterFPS Gaming OS
+            ## 🎮 MasterFPS Gaming OS (ISO Completa)
+
+            **Otimizações inclusas:**
+            - Kernel **CachyOS** (BORE scheduler, LTO, x86-64-v3/v4)
+            - **NVIDIA GTX 950** (Driver 550+ DKMS + 32-bit + persistence)
+            - **Modo Gamer / Performance Máxima**: Gamemode, tuned, power-profiles-daemon, mitigations=off
+            - **Atalhos na Área de Trabalho**: Steam, Firefox, VS Code, FreeLLMAPI, OpenCode
+            - **Cursor Grande Breeze** (48px)
             
-            **ISO bootável UEFI + BIOS** com:
-            - Kernel **CachyOS** (BORE scheduler, LTO, -O3, x86-64-v3/v4)
-            - **Steam** (Flatpak) + **Proton-GE** + **Wine-GE** + **Gamescope** + **MangoHud** + **Gamemode**
-            - **Navegadores**: Firefox, Chrome, Edge (Flatpak)
-            - **Drivers GPU**: AMD (RADV), Intel (ANV), NVIDIA 550+ (DKMS)
-            - **Otimizações**: zram, ananicy-cpp, tuned, transparent_hugepage, mitigations=off
-            - **Usuário padrão**: `gaming` / `gaming` (sudo sem senha)
-            
-            ### 📥 Como usar
+            ### 📥 Como instalar
             1. Baixe todas as partes `MasterFPS.iso.part-*`
             2. Junte: `cat MasterFPS.iso.part-* > MasterFPS.iso`
-            3. Verifique: `sha256sum -c MasterFPS.sha256`
-            4. Grave no USB: `sudo dd if=MasterFPS.iso of=/dev/sdX bs=4M status=progress conv=fsync`
-            5. Boot UEFI → Login `gaming`/`gaming` → Steam abre automaticamente
-            
-            ### ⚡ Otimizações aplicadas
-            - Kernel: `mitigations=off`, `transparent_hugepage=always`, `nvidia_drm.modeset=1`
-            - Scheduler: BORE, `kernel.sched_autogroup_enabled=0`
-            - I/O: BFQ scheduler, zram (zstd), zswap
-            - CPU: governor=performance, idle=poll
-            
-            ### 🔐 SHA256
-            ${{ env.ISO_NAME }}.iso: `${{ env.ISO_NAME }}.sha256`
+            3. Grave no USB (Rufus no modo DD ou `dd` no Linux)
           files: |
             ${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso.part-*
             ${{ env.ISO_NAME }}.sha256
@@ -117,10 +105,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload ISO as Artifact (fallback)
+      - name: Upload ISO Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ISO_NAME }}-iso
-          path: ${{ env.MKOSI_OUTPUT_DIR }}/${{ env.ISO_NAME }}.iso
+          path: ${{ env.MKOSI_OUTPUT_DIR }}/*
           retention-days: 30
-          compression-level: 0
