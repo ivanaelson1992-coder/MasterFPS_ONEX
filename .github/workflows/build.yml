@@ -7,29 +7,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Instalar Dependencias
+      - name: Instalar Dependencias do Host Arch
         run: |
-          sudo apt-get update
-          sudo apt-get install -y arch-install-scripts pacman xorriso mtools dosfstools zstd systemd-container python3-pip systemd-boot
-          sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm git python-pip arch-install-scripts pacman-contrib xorriso mtools dosfstools zstd systemd-libs base-devel
+          # Instalar mkosi via pip no Arch
+          pip install --break-system-packages git+https://github.com/systemd/mkosi.git
 
-      - name: Configurar Chaves Arch
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configurar Chaves CachyOS
         run: |
-          sudo mkdir -p /etc/pacman.d/gnupg
-          sudo pacman-key --init
-          sudo pacman-key --populate archlinux || true
+          pacman-key --init
+          pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
+          pacman-key --lsign-keys F3B607488DB35A47
+          # Instalar keyring do CachyOS para permitir download dos pacotes otimizados
+          pacman -U --noconfirm 'https://mirror.cachyos.org/cachyos-repo/x86_64/cachyos-keyring-1.2-1-any.pkg.tar.zst'
 
       - name: Build Image
         run: |
           mkdir -p output
           chmod +x mkosi.build mkosi.postinst
-          # Usando o comando moderno 'build' do mkosi
-          sudo mkosi --force --output-dir=output build
+          mkosi --force --output-dir=output build
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
