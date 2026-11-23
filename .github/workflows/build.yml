@@ -11,8 +11,11 @@ jobs:
       - name: Build
         run: |
           sudo apt-get update
-          sudo apt-get install -y mkosi arch-install-scripts pacman xorriso mtools dosfstools zstd
-          sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
+          # Remove mkosi do apt se existir para evitar conflito
+          sudo apt-get remove -y mkosi || true
+          sudo apt-get install -y arch-install-scripts pacman xorriso mtools dosfstools zstd python3-pip
+          # Instala o mkosi atualizado ignorando versões anteriores
+          sudo pip install --break-system-packages --ignore-installed git+https://github.com/systemd/mkosi.git
           sudo mkosi --force build
       - name: Upload
         uses: actions/upload-artifact@v4
