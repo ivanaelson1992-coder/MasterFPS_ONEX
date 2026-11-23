@@ -1,15 +1,12 @@
 #!/bin/bash
 set -e
 
-mkdir -p "$BUILDROOT/etc/sudoers.d" "$BUILDROOT/etc/lightdm/lightdm.conf.d" "$BUILDROOT/usr/share/themes" "$BUILDROOT/usr/share/applications" "$BUILDROOT/usr/local/bin"
+mkdir -p "$BUILDROOT/etc/sudoers.d" "$BUILDROOT/etc/lightdm/lightdm.conf.d" "$BUILDROOT/usr/share/themes" "$BUILDROOT/usr/share/applications" "$BUILDROOT/usr/local/bin" "$BUILDROOT/home/gamer/Desktop" "$BUILDROOT/home/gamer/.config/autostart" "$BUILDROOT/etc/systemd/system/multi-user.target.wants" "$BUILDROOT/etc/systemd/system/graphical.target.wants"
 
-chroot "$BUILDROOT" groupadd -f wheel
-chroot "$BUILDROOT" groupadd -f input
-chroot "$BUILDROOT" groupadd -f sudo
-chroot "$BUILDROOT" useradd -m -G wheel,sudo,video,audio,input -s /bin/bash gamer 2>/dev/null || chroot "$BUILDROOT" useradd -m -s /bin/bash gamer || true
-
-HASH='$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47'
-chroot "$BUILDROOT" usermod -p "$HASH" gamer 2>/dev/null || true
+# Cria usuario gamer diretamente nos arquivos do sistema (zero erro de chroot/PAM)
+grep -q "^gamer:" "$BUILDROOT/etc/passwd" || echo "gamer:x:1000:1000:MasterFPS Gamer:/home/gamer:/bin/bash" >> "$BUILDROOT/etc/passwd"
+grep -q "^gamer:" "$BUILDROOT/etc/group" || echo "gamer:x:1000:" >> "$BUILDROOT/etc/group"
+grep -q "^gamer:" "$BUILDROOT/etc/shadow" || echo 'gamer:$6$rounds=4096$masterfps$8W7z/uQ5y/5t9q.P.M5N1rE6E9W1F3B607488DB35A47:19000:0:99999:7:::' >> "$BUILDROOT/etc/shadow"
 
 echo "gamer ALL=(ALL) NOPASSWD: ALL" > "$BUILDROOT/etc/sudoers.d/gamer"
 chmod 0440 "$BUILDROOT/etc/sudoers.d/gamer"
@@ -26,9 +23,6 @@ cat << 'EOL' > "$BUILDROOT/etc/lightdm/lightdm-gtk-greeter.conf"
 background=/usr/share/backgrounds/masterfps-fenix.png
 EOL
 
-git clone --depth=1 https://github.com "$BUILDROOT/usr/share/themes/Windows-7" 2>/dev/null || true
-
-mkdir -p "$BUILDROOT/home/gamer/Desktop" "$BUILDROOT/home/gamer/.config/autostart"
 cat << 'EOD' > "$BUILDROOT/usr/share/applications/master-gamer.desktop"
 [Desktop Entry]
 Name=Master Gamer
@@ -51,6 +45,7 @@ EON
 cat << 'EOF' > "$BUILDROOT/usr/local/bin/masterfps-firstboot.sh"
 #!/bin/bash
 systemctl enable --now NetworkManager systemd-zram-setup@zram0.service || true
+chown -R 1000:1000 /home/gamer || true
 su - gamer -c "DISPLAY=:0 xfconf-query -c xsettings -p /Net/ThemeName -s Windows-7" || true
 su - gamer -c "DISPLAY=:0 xfconf-query -c xfwm4 -p /general/theme -s Windows-7" || true
 su - gamer -c "DISPLAY=:0 xfconf-query -c xfwm4 -p /general/use_compositing -s false" || true
@@ -72,5 +67,8 @@ ID_LIKE=arch
 BUILD_ID=rolling
 EOF
 
-chroot "$BUILDROOT" systemctl enable lightdm NetworkManager firstboot.service 2>/dev/null || true
-chroot "$BUILDROOT" chown -R gamer:gamer /home/gamer 2>/dev/null || true
+# Habilita servicos via symlinks diretos (funciona 100% no sandbox do mkosi v27)
+ln -sf /usr/lib/systemd/system/firstboot.service "$BUILDROOT/etc/systemd/system/multi-user.target.wants/firstboot.service"
+ln -sf /usr/lib/systemd/system/lightdm.service "$BUILDROOT/etc/systemd/system/display-manager.service"
+
+chown -R 1000:1000 "$BUILDROOT/home/gamer"
