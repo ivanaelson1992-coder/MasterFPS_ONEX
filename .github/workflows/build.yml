@@ -31,8 +31,17 @@ jobs:
       - name: Install dependencies & mkosi
         run: |
           sudo apt-get update
-          sudo apt-get install -y arch-install-scripts pacman-package-manager zstd squashfs-tools xorriso mtools dosfstools python3-pip systemd-container qemu-utils
+          sudo apt-get install -y \
+            systemd systemd-container systemd-boot-efi systemd-sysv \
+            arch-install-scripts pacman-package-manager \
+            zstd squashfs-tools xorriso mtools dosfstools \
+            python3-pip qemu-utils grub-efi-amd64-bin grub-pc-bin \
+            debian-archive-keyring
+          # Ensure systemd-repart exists
+          which systemd-repart || sudo apt-get install -y systemd
+          which systemd-repart
           sudo pip install --break-system-packages git+https://github.com/systemd/mkosi.git
+          mkosi --version
 
       - name: Initialize Arch/CachyOS keyring
         run: |
