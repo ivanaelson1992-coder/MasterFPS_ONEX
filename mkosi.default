@@ -4,16 +4,17 @@ Architecture=x86-64
 Repositories=core,extra,multilib
 
 [Output]
-Format=tar
-Output=MasterFPS-x86_64.tar
+Format=disk
+Output=MasterFPS-x86_64.raw
 ImageId=masterfps
 OutputDirectory=out
 CompressOutput=none
 
 [Content]
-Bootable=no
-BootElTorito=no
-PartitionDefinitions=
+Bootable=yes
+BootElTorito=yes
+BootableImage=systemd-boot
+PartitionDefinitions=mkosi.repart.d/
 UnifiedKernelImages=yes
 Hostname=masterfps
 Timezone=America/Fortaleza
