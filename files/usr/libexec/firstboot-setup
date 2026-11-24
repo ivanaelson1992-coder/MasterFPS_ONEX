@@ -1,6 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
+# Criar grupos necessários se não existirem
+for grp in wheel video audio input; do
+    getent group "$grp" >/dev/null || groupadd -r "$grp"
+done
+
+# Criar usuario gamer se não existir
+if ! id gamer >/dev/null 2>&1; then
+    useradd -m -G wheel,video,audio,input -s /bin/bash gamer
+    echo "gamer:gamer" | chpasswd
+    echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
+fi
+
 # Gera locale
 locale-gen
 localectl set-locale LANG=pt_BR.UTF-8
@@ -55,6 +67,7 @@ WAYLAND_CURSOR_THEME=breeze_cursors
 EOF
 
 chown -R gamer:gamer /home/gamer/.config
+chown -R gamer:gamer /home/gamer
 
 # Marca firstboot concluido
 touch /etc/.firstboot_done

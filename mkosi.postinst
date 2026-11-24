@@ -1,25 +1,13 @@
 #!/bin/bash
 set -e
 
-# Criar grupos necessários se não existirem
-for grp in wheel video audio input; do
-    getent group "$grp" >/dev/null || groupadd -r "$grp"
-done
-
-# Criar usuario
-useradd -m -G wheel,video,audio,input -s /bin/bash gamer
-echo "gamer:gamer" | chpasswd
-echo "gamer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/gamer
-
 # Habilitar servicos basicos
 systemctl enable lightdm NetworkManager firstboot.service || true
 
-# Configurar autologin para lightdm
+# Configurar autologin para lightdm (usuario sera criado no firstboot)
 mkdir -p /etc/lightdm/lightdm.conf.d
 cat > /etc/lightdm/lightdm.conf.d/autologin.conf <<'EOF'
 [Seat:*]
 autologin-user=gamer
 autologin-user-timeout=0
 EOF
-
-chown -R gamer:gamer /home/gamer
