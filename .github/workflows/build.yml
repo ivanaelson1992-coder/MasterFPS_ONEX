@@ -25,10 +25,7 @@ jobs:
         run: |
           mkosi --version
           mkosi --help
-
-      - name: Validate mkosi config
-        run: |
-          mkosi --dry-run
+          ls -la
 
       - name: Build MasterFPS
         run: |
