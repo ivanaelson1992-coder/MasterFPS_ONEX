@@ -1,14 +1,1 @@
-[Partition]
-Type=esp
-Kind=esp
-Size=256M
-Filesystem=vfat
-MountPoint=/efi
-Label=esp-x86-64
-
-[Partition]
-Type=root
-Size=5G
-Filesystem=ext4
-MountPoint=/
-Label=root-x86-64
+mkosi.repart.d
