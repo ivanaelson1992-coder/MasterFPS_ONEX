@@ -1,7 +1,0 @@
-[Partition]
-Type=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
-Size=512M
-
-[Partition]
-Type=0fc63daf-8483-4772-8e79-3d69d8477de4
-Size=5G
