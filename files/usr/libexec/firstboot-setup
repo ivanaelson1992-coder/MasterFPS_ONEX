@@ -69,6 +69,15 @@ EOF
 chown -R gamer:gamer /home/gamer/.config
 chown -R gamer:gamer /home/gamer
 
+# Habilitar e configurar lightdm (agora ja esta instalado)
+systemctl enable lightdm || true
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/autologin.conf <<'EOF'
+[Seat:*]
+autologin-user=gamer
+autologin-user-timeout=0
+EOF
+
 # Marca firstboot concluido
 touch /etc/.firstboot_done
 

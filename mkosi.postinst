@@ -1,13 +1,7 @@
 #!/bin/bash
 set -e
 
-# Habilitar servicos basicos
-systemctl enable lightdm NetworkManager firstboot.service || true
+# Habilitar apenas servicos que ja existem no base (NetworkManager)
+systemctl enable NetworkManager firstboot.service || true
 
-# Configurar autologin para lightdm (usuario sera criado no firstboot)
-mkdir -p /etc/lightdm/lightdm.conf.d
-cat > /etc/lightdm/lightdm.conf.d/autologin.conf <<'EOF'
-[Seat:*]
-autologin-user=gamer
-autologin-user-timeout=0
-EOF
+# lightdm e configuracao de autologin serao feitos no firstboot (apos instalacao dos pacotes)
