@@ -1,6 +1,3 @@
 [Partition]
 Type=0fc63daf-8483-4772-8e79-3d69d8477de4
 Size=5G
-Filesystem=ext4
-MountPoint=/
-Label=root-x86-64
