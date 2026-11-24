@@ -3,6 +3,7 @@ Type=esp
 Size=256M
 Filesystem=vfat
 MountPoint=/efi
+Start=1M
 
 [Partition]
 Type=root
