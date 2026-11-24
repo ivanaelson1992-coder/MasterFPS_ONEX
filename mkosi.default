@@ -19,7 +19,6 @@ Locale=pt_BR.UTF-8
 Keymap=br-abnt2
 RootPassword=gamer
 SkeletonTrees=files
-DefinitionFiles=mkosi.repart.d
 
 Packages=
     base
