@@ -1,0 +1,11 @@
+[Partition]
+Type=esp
+Size=256M
+Filesystem=vfat
+MountPoint=/efi
+
+[Partition]
+Type=root
+Size=4G
+Filesystem=ext4
+MountPoint=/
