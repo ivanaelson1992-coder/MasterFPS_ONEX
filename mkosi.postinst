@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Criar grupos necessários se não existirem
+for grp in wheel video audio input; do
+    getent group "$grp" >/dev/null || groupadd -r "$grp"
+done
+
 # Criar usuario
 useradd -m -G wheel,video,audio,input -s /bin/bash gamer
 echo "gamer:gamer" | chpasswd
