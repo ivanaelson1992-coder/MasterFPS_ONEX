@@ -32,6 +32,10 @@ jobs:
           chmod +x mkosi.build mkosi.postinst
           mkosi --force 2>&1 | head -100
 
+      - name: List output
+        run: |
+          ls -la out/ 2>/dev/null || echo "No out directory"
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
