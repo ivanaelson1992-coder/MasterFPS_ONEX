@@ -1,5 +1,44 @@
 #!/bin/bash
 set -e
 
-# Simple postinst script - just enable NetworkManager
+# Install systemd-boot to the ESP partition
+# The ESP should be available as /efi after partition mounting
+if [ -f /efi/loader/entries/masterfps.conf ]; then
+    # systemd-boot is already installed
+    echo "systemd-boot already installed"
+else
+    # Install systemd-boot
+    bootctl install --esp-path=/efi --boot-path=/efi || {
+        echo "Warning: Failed to install systemd-boot"
+    }
+fi
+
+# Create boot loader entries
+mkdir -p /efi/loader/entries
+
+# Copy kernel and initramfs to /efi/boot
+if [ -f /boot/vmlinuz-linux-zen ]; then
+    cp /boot/vmlinuz-linux-zen /efi/boot/vmlinuz-linux-zen
+fi
+if [ -f /boot/intel-ucode.img ]; then
+    cp /boot/intel-ucode.img /efi/boot/intel-ucode.img 2>/dev/null || true
+fi
+if [ -f /boot/amd-ucode.img ]; then
+    cp /boot/amd-ucode.img /efi/boot/amd-ucode.img 2>/dev/null || true
+fi
+
+# Install systemd-boot entry
+cat > /efi/loader/entries/masterfps.conf << 'EOF'
+title    MasterFPS
+linux    /vmlinuz-linux-zen
+initrd   /intel-ucode.img
+initrd   /amd-ucode.img
+initrd   /initramfs-linux-zen.img
+options  root=PARTUUID= rootfstype=ext4 rw
+EOF
+
+# Create the default entry
+echo "masterfps" > /efi/loader/default.conf
+
+# Enable NetworkManager
 systemctl enable NetworkManager || true
