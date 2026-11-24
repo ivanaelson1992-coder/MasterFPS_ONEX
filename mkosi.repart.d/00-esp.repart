@@ -1,7 +1,6 @@
 [Partition]
-Type=esp
-Kind=esp
-Size=256M
+Type=1
+Size=512M
 Filesystem=vfat
 MountPoint=/efi
 Label=esp-x86-64
