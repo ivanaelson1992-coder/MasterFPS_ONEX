@@ -12,6 +12,7 @@ CompressOutput=zstd
 [Content]
 Bootable=yes
 Bootloader=systemd-boot
+PartitionDefinitions=mkosi.repart.d/
 UnifiedKernelImages=no
 Hostname=masterfps
 Timezone=America/Fortaleza
