@@ -19,6 +19,13 @@ Locale=pt_BR.UTF-8
 Keymap=br-abnt2
 RootPassword=gamer
 SkeletonTrees=files
+
+[Partition "ESP"]
+Type=esp
+Size=256M
+Filesystem=vfat
+Flags=noauto,x-systemd.automount
+
 Packages=
     base
     linux-zen
