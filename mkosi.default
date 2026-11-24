@@ -6,6 +6,7 @@ Repositories=core,extra,multilib
 [Output]
 Format=tar
 Output=MasterFPS-x86_64.tar
+ImageId=masterfps
 OutputDirectory=out
 CompressOutput=none
 
