@@ -23,7 +23,7 @@ jobs:
 
       - name: Preparar Perfil Releng e Buildar ISO
         run: |
-          cp -r /usr/share/archiso/configs/releng /tmp/profile
+          cp -r /usr/share/archiso/configs/releng /tmp/profile && sed -i '/^#\[multilib\]/,+1 s/^#//' /tmp/profile/pacman.conf /etc/pacman.conf
           cat archiso/packages.x86_64 >> /tmp/profile/packages.x86_64
           sort -u /tmp/profile/packages.x86_64 -o /tmp/profile/packages.x86_64
           cp -r archiso/airootfs/* /tmp/profile/airootfs/
