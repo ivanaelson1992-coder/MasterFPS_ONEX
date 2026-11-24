@@ -1,0 +1,14 @@
+[Partition]
+Type=esp
+Size=256M
+Filesystem=vfat
+MountPoint=/efi
+Label=esp-x86-64
+Flags=boot
+
+[Partition]
+Type=root
+Size=4G
+Filesystem=ext4
+MountPoint=/
+Label=root-x86-64
