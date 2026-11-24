@@ -10,9 +10,8 @@ OutputDirectory=out
 CompressOutput=zstd
 
 [Content]
-Bootable=yes
+Bootable=no
 BootElTorito=no
-BootableImage=systemd-boot
 PartitionDefinitions=mkosi.repart.d/
 UnifiedKernelImages=no
 Hostname=masterfps
