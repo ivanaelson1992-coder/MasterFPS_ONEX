@@ -5,9 +5,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,59 +12,30 @@ jobs:
       image: archlinux:latest
       options: --privileged
     steps:
-      - name: Instalar Dependencias
+      - name: Instalar Archiso e Ferramentas
         run: |
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm git python python-pip arch-install-scripts squashfs-tools libisoburn mtools dosfstools zstd systemd cpio tar xz gzip bzip2 device-mapper
-          pip install --break-system-packages git+https://github.com/systemd/mkosi.git
+          pacman-key --init
+          pacman-key --populate archlinux
+          pacman -Syu --noconfirm --needed archiso git squashfs-tools libisoburn dosfstools mtools edk2-ovmf
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build MasterFPS
+      - name: Preparar Perfil Releng e Buildar ISO
         run: |
-          set +e
-          chmod +x mkosi.build mkosi.postinst || true
-          {
-            echo "===== mkosi version ====="
-            mkosi --version
-            echo "===== repository files ====="
-            ls -la
-            echo "===== arch/cpu info ====="
-            uname -a
-          } > build.log 2>&1
-          mkosi --force build >> build.log 2>&1
-          code=$?
-          echo "MKOSI_EXIT_CODE=$code" >> build.log
-          echo "===== out directory =====" >> build.log
-          ls -la out >> build.log 2>&1
-          tail -n 150 build.log
-          exit $code
+          cp -r /usr/share/archiso/configs/releng /tmp/profile
+          cat archiso/packages.x86_64 >> /tmp/profile/packages.x86_64
+          sort -u /tmp/profile/packages.x86_64 -o /tmp/profile/packages.x86_64
+          cp -r archiso/airootfs/* /tmp/profile/airootfs/
+          chmod +x /tmp/profile/airootfs/root/customize_airootfs.sh
+          sed -i 's/iso_name="archlinux"/iso_name="MasterFPS"/' /tmp/profile/profiledef.sh
+          sed -i 's/iso_label="ARCH_/iso_label="MASTERFPS_/' /tmp/profile/profiledef.sh
+          mkdir -p /tmp/work out
+          mkarchiso -v -w /tmp/work -o out /tmp/profile
+          ls -lh out/
 
-      - name: Publicar log no branch ci-logs
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B ci-logs
-          git add -f build.log
-          git commit -m "CI build log $(date -u +%FT%TZ)" || true
-          git push -f origin ci-logs || true
-
-      - name: Upload Artifact
-        if: always()
+      - name: Upload ISO Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MasterFPS-Image
-          path: |
-            out/*
-            out/**/*
-          if-no-files-found: warn
-
-      - name: Debug output directory
-        if: always()
-        run: |
-          echo "=== Checking out directory ==="
-          find out -type f -name "*.raw*" -o -name "*.img*" -o -name "*.iso*" 2>/dev/null | head -20
-          ls -la out/ 2>/dev/null || echo "out directory does not exist"
-          ls -la /var/lib/mkosi/ 2>/dev/null | head -20 || echo "mkosi cache not accessible"
+          name: MasterFPS-x86_64-ISO
+          path: out/*.iso

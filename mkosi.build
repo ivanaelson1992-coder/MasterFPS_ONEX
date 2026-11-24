@@ -1,6 +1,0 @@
-#!/bin/bash
-set -e
-
-# Apenas prepara diretórios
-mkdir -p "$DESTDIR/etc/modules-load.d" "$DESTDIR/usr/local/bin"
-echo "ntsync" > "$DESTDIR/etc/modules-load.d/ntsync.conf"
