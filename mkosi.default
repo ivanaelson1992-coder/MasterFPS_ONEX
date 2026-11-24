@@ -4,8 +4,8 @@ Architecture=x86-64
 Repositories=core,extra,multilib
 
 [Output]
-Format=squashfs
-Output=MasterFPS-x86_64.img
+Format=tar
+Output=MasterFPS-x86_64.tar
 OutputDirectory=out
 CompressOutput=none
 
