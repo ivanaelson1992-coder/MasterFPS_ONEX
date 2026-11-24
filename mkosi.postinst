@@ -27,7 +27,18 @@ if [ -f /boot/amd-ucode.img ]; then
     cp /boot/amd-ucode.img /efi/boot/amd-ucode.img 2>/dev/null || true
 fi
 
-# Habilitar apenas servicos que ja existem no base (NetworkManager)
-systemctl enable NetworkManager firstboot.service || true
+# Install systemd-boot entry
+cat > /efi/loader/entries/masterfps.conf << 'EOF'
+title    MasterFPS
+linux    /vmlinuz-linux-zen
+initrd   /intel-ucode.img
+initrd   /amd-ucode.img
+initrd   /initramfs-linux-zen.img
+options  root=PARTUUID= rootfstype=ext4 rw
+EOF
 
-# lightdm e configuracao de autologin serao feitos no firstboot (apos instalacao dos pacotes)
+# Create the default entry
+echo "masterfps" > /efi/loader/default.conf
+
+# Habilitar servicos que ja existem no base (NetworkManager)
+systemctl enable NetworkManager systemd-networkd || true
