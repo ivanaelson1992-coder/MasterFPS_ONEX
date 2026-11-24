@@ -4,16 +4,16 @@ Architecture=x86-64
 Repositories=core,extra,multilib
 
 [Output]
-Format=disk
-Output=MasterFPS-x86_64.raw
+Format=squashfs
+Output=MasterFPS-x86_64.img
 OutputDirectory=out
-CompressOutput=zstd
+CompressOutput=none
 
 [Content]
 Bootable=no
 BootElTorito=no
 PartitionDefinitions=
-UnifiedKernelImages=no
+UnifiedKernelImages=yes
 Hostname=masterfps
 Timezone=America/Fortaleza
 Locale=pt_BR.UTF-8
