@@ -1,0 +1,5 @@
+[Partition]
+Type=root
+Size=4G
+Filesystem=ext4
+MountPoint=/
