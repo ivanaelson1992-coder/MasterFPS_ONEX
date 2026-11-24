@@ -12,7 +12,7 @@ CompressOutput=zstd
 [Content]
 Bootable=no
 BootElTorito=no
-PartitionDefinitions=mkosi.repart.d/
+PartitionDefinitions=
 UnifiedKernelImages=no
 Hostname=masterfps
 Timezone=America/Fortaleza
