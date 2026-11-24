@@ -12,6 +12,7 @@ CompressOutput=zstd
 [Content]
 Bootable=no
 BootElTorito=no
+BootableImage=systemd-boot
 PartitionDefinitions=
 UnifiedKernelImages=no
 Hostname=masterfps
