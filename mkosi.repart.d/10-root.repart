@@ -1,0 +1,6 @@
+[Partition]
+Type=root
+Size=4G
+Filesystem=ext4
+MountPoint=/
+Label=root-x86-64
