@@ -27,18 +27,28 @@ if [ -f /boot/amd-ucode.img ]; then
     cp /boot/amd-ucode.img /efi/boot/amd-ucode.img 2>/dev/null || true
 fi
 
+# Get the PARTUUID of the root partition
+ROOT_PARTUUID=$(blkid -s PARTUUID -o value /dev/root 2>/dev/null || echo "")
+if [ -z "$ROOT_PARTUUID" ]; then
+    ROOT_PARTUUID=$(lsblk -no PARTUUID /dev/root | head -1 | tr -d ' ')
+fi
+
 # Install systemd-boot entry
-cat > /efi/loader/entries/masterfps.conf << 'EOF'
+cat > /efi/loader/entries/masterfps.conf << EOF
 title    MasterFPS
 linux    /vmlinuz-linux-zen
 initrd   /intel-ucode.img
 initrd   /amd-ucode.img
 initrd   /initramfs-linux-zen.img
-options  root=PARTUUID= rootfstype=ext4 rw
+options  root=PARTUUID=${ROOT_PARTUUID} rootfstype=ext4 rw
 EOF
 
 # Create the default entry
 echo "masterfps" > /efi/loader/default.conf
+
+# Create loader.conf for timeout
+echo "default masterfps.conf" > /efi/loader/loader.conf
+echo "timeout 5" >> /efi/loader/loader.conf
 
 # Enable NetworkManager
 systemctl enable NetworkManager || true

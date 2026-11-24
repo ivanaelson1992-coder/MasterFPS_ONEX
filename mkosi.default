@@ -12,9 +12,9 @@ CompressOutput=zstd
 [Content]
 Bootable=no
 BootElTorito=no
-BootableImage=systemd-boot
 PartitionDefinitions=mkosi.repart.d/
 UnifiedKernelImages=no
+Loader=/efi/loader
 Hostname=masterfps
 Timezone=America/Fortaleza
 Locale=pt_BR.UTF-8
